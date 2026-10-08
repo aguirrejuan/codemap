@@ -1,0 +1,23 @@
+[project]
+name = "codemap"
+version = "0.1.0"
+description = "See a Python repo as nested packages, modules, classes and functions, and what a PR touches"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+codemap = "codemap.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/codemap"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
