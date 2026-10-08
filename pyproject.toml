@@ -3,6 +3,7 @@ name = "codemap"
 version = "0.1.0"
 description = "See a Python repo as nested packages, modules, classes and functions, and what a PR touches"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.9"
 dependencies = []
 
