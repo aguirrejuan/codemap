@@ -15,7 +15,7 @@ and it keeps that nesting in the picture.
 uv tool install ~/dev-personal/codemap
 ```
 
-No runtime dependencies. The page loads Cytoscape.js from a CDN.
+No runtime dependencies. The page loads React Flow and ELK from a CDN.
 
 ## Use
 
@@ -29,9 +29,14 @@ codemap ~/code/myrepo --diff origin/main --open
 
 The page starts at a zoom that fits the repo's size. Use the level buttons to
 show packages, modules, classes or functions. Double-click a box to open or
-close it; click one to list what it calls and what calls it. Edges between
-hidden children fold into one edge on the nearest visible box, labelled with
-the number of call sites.
+close it. Edges between hidden children fold into one edge on the nearest
+visible box, labelled with the number of call sites.
+
+Click a box to read its source, with the branch's changed lines marked, and
+to list what it calls and what calls it. **Focus** strips the map down to
+that symbol and its callers and callees, one to three hops out, still nested
+in their packages; Esc leaves it. Tests stay hidden until you untick **Hide
+tests**. Hovering a box lights its edges and fades the rest.
 
 | Flag | Effect |
 | --- | --- |
@@ -40,6 +45,7 @@ the number of call sites.
 | `--out PATH` | where to write the page (default `~/codemap-<repo>.html`) |
 | `--mermaid` | print a Markdown PR comment instead of a page |
 | `--json` | print the graph instead of a page |
+| `--no-source` | leave source code out of the page, for sharing or a smaller file |
 
 Edge kinds: **calls**; **references**, for a function passed as a value, such
 as Airflow's `python_callable=`; and **imports**, hidden until you ask.

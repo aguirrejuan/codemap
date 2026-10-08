@@ -8,7 +8,9 @@ PLACEHOLDER = '/*DATA*/null'
 
 
 def html(data, out):
-    blob = json.dumps(data, separators=(',', ':'), ensure_ascii=False).replace('</', '<\\/')
+    # Source text may hold `</script>` or `<!--`, which would end or derail the script tag.
+    blob = (json.dumps(data, separators=(',', ':'), ensure_ascii=False)
+            .replace('</', '<\\/').replace('<!--', '<\\u0021--'))
     page = open(TEMPLATE, encoding='utf-8').read()
     if PLACEHOLDER not in page:
         raise SystemExit('template.html has no /*DATA*/null placeholder')

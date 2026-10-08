@@ -44,6 +44,7 @@ def main(argv=None):
     ap.add_argument('--open', action='store_true', help='open the page in a browser')
     ap.add_argument('--mermaid', action='store_true', help='print a Mermaid PR comment instead')
     ap.add_argument('--json', action='store_true', help='print the graph as JSON instead')
+    ap.add_argument('--no-source', action='store_true', help='leave source code out of the page')
     a = ap.parse_args(argv)
 
     repo = os.path.abspath(a.repo)
@@ -53,7 +54,7 @@ def main(argv=None):
     if not index.mods:
         sys.exit(f'codemap: no Python files found in {repo}')
 
-    hops = None
+    hops, ranges = None, {}
     if a.diff:
         try:
             ranges = diffmod.changed_ranges(repo, a.diff)
@@ -63,8 +64,11 @@ def main(argv=None):
     base, pr = summarise(index, hops)
 
     data = index.data()
-    data.update(repo=os.path.basename(repo), generated=datetime.now(timezone.utc).isoformat(timespec='seconds'),
-                summary=base, diff={'base': a.diff, 'depth': a.depth, 'hops': hops, 'summary': pr} if a.diff else None)
+    data.update(repo=os.path.basename(repo), root=repo,
+                generated=datetime.now(timezone.utc).isoformat(timespec='seconds'), summary=base,
+                sources={} if a.no_source else index.sources,
+                diff={'base': a.diff, 'depth': a.depth, 'hops': hops, 'summary': pr, 'lines': ranges}
+                if a.diff else None)
 
     if a.json:
         json.dump(data, sys.stdout, indent=1)

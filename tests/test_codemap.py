@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from codemap import diff, parse, render
+from codemap import cli, diff, parse, render
 
 FIXTURE = Path(__file__).parent / 'fixtures' / 'fraudsvc'
 
@@ -108,3 +108,21 @@ def test_mermaid_nests_modules_in_packages(repo):
     assert 'subgraph n_features["features/"]' in out
     assert 'compute.py<br/><small>changed</small>' in out
     assert 'n_features_store -->|2| n_features_compute' in out
+
+
+def test_page_carries_source_and_changed_lines(repo, tmp_path):
+    path = repo / 'features' / 'compute.py'
+    path.write_text(path.read_text().replace('return len(raw)', 'return len(raw) * 2'))
+    out = tmp_path / 'map.html'
+    cli.main([str(repo), '--diff', 'main', '--out', str(out)])
+    page = out.read_text()
+    assert '/*DATA*/null' not in page
+    assert 'return len(raw) * 2' in page
+    assert '"features/compute.py":[[2,2]]' in page
+
+
+def test_source_cannot_close_the_script_tag(tmp_path):
+    out = tmp_path / 'map.html'
+    render.html({'sources': {'a.py': 's = "</script><!--"'}}, str(out))
+    script = out.read_text().split('const D = ', 1)[1]
+    assert '</script><!--' not in script.split(';\n', 1)[0]

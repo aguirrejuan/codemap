@@ -4,31 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Codemap</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/style.css">
 <style>
 :root {
   --bg: #f7f6f2; --panel: #ffffff; --text: #1f1e1c; --muted: #6b6a65; --border: #d6d4cb;
-  --pkg: #efede6; --mod: #fbfaf7; --cls: #eef3fa; --sym: #ffffff; --edge: #8f8d85;
+  --pkg: rgba(120, 110, 80, .06); --mod: rgba(255, 255, 255, .7); --cls: rgba(60, 110, 180, .07); --sym: #ffffff;
+  --edge: #9a978d; --hl: #185fa5;
   --changed-bg: #fcebeb; --changed-bd: #a32d2d; --aff-bg: #faeeda; --aff2-bg: #fdf6ea; --aff-bd: #ba7517;
-  --accent: #185fa5;
+  --code-bg: #f3f2ed; --code-chg: #fbe3e3;
+  --k-pkg: #7a6f52; --k-mod: #4f6b3a; --k-cls: #2f5f99; --k-fn: #6b4f99;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #1b1b19; --panel: #252523; --text: #ecebe6; --muted: #a3a29b; --border: #45443f;
-    --pkg: #2a2a27; --mod: #31312e; --cls: #26303b; --sym: #3a3a36; --edge: #8a887f;
+    --pkg: rgba(255, 245, 220, .035); --mod: rgba(255, 255, 255, .045); --cls: rgba(110, 160, 230, .08); --sym: #2f2f2c;
+    --edge: #85837a; --hl: #85b7eb;
     --changed-bg: #5a1d1d; --changed-bd: #f09595; --aff-bg: #4f3407; --aff2-bg: #3a2a0d; --aff-bd: #ef9f27;
-    --accent: #85b7eb;
+    --code-bg: #1f1f1d; --code-chg: #4a1e1e;
+    --k-pkg: #c9bb92; --k-mod: #a8c98f; --k-cls: #8db8ef; --k-fn: #c3a8ef;
   }
 }
 :root[data-theme="dark"] {
   --bg: #1b1b19; --panel: #252523; --text: #ecebe6; --muted: #a3a29b; --border: #45443f;
-  --pkg: #2a2a27; --mod: #31312e; --cls: #26303b; --sym: #3a3a36; --edge: #8a887f;
+  --pkg: rgba(255, 245, 220, .035); --mod: rgba(255, 255, 255, .045); --cls: rgba(110, 160, 230, .08); --sym: #2f2f2c;
+  --edge: #85837a; --hl: #85b7eb;
   --changed-bg: #5a1d1d; --changed-bd: #f09595; --aff-bg: #4f3407; --aff2-bg: #3a2a0d; --aff-bd: #ef9f27;
-  --accent: #85b7eb;
+  --code-bg: #1f1f1d; --code-chg: #4a1e1e;
+  --k-pkg: #c9bb92; --k-mod: #a8c98f; --k-cls: #8db8ef; --k-fn: #c3a8ef;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { margin: 0; height: 100%; }
-body { background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; display: flex; flex-direction: column; }
+html, body, #app { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+#app { display: flex; flex-direction: column; }
 header { padding: 12px 16px 8px; border-bottom: 1px solid var(--border); }
 h1 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
 .summary { color: var(--muted); font-size: 13px; margin: 0; }
@@ -37,101 +46,154 @@ h1 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: var(--panel); color: var(--muted); padding: 5px 10px; font: inherit; font-size: 13px; cursor: pointer; }
 .seg button + button { border-left: 1px solid var(--border); }
-.seg button.on { background: var(--pkg); color: var(--text); font-weight: 600; }
+.seg button.on { background: var(--bg); color: var(--text); font-weight: 600; }
 label.chk { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); cursor: pointer; }
 input[type=search] { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); width: 240px; max-width: 100%; }
-button.plain { font: inherit; font-size: 13px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; }
+button.plain { font: inherit; font-size: 13px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; }
+button.plain:hover { border-color: var(--hl); }
+.focuschip { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 4px 3px 10px; border: 1px solid var(--hl); border-radius: 8px; }
+.focuschip b { font-weight: 600; }
+.focuschip .seg button { padding: 2px 8px; }
 main { flex: 1; display: flex; min-height: 0; }
-#cy { flex: 1; min-width: 0; }
-aside { width: 320px; border-left: 1px solid var(--border); background: var(--panel); padding: 14px 16px; overflow-y: auto; font-size: 13px; }
+.canvas { flex: 1; min-width: 0; position: relative; }
+aside { width: 380px; border-left: 1px solid var(--border); background: var(--panel); padding: 14px 16px; overflow-y: auto; font-size: 13px; }
 aside h2 { font-size: 15px; margin: 0 0 2px; word-break: break-all; }
-aside .meta { color: var(--muted); margin: 0 0 10px; word-break: break-all; }
+aside .meta { color: var(--muted); margin: 0 0 8px; word-break: break-all; }
 aside h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 14px 0 4px; }
 aside ul { list-style: none; margin: 0; padding: 0; }
 aside li { padding: 2px 0; }
-aside a { color: var(--accent); cursor: pointer; text-decoration: none; word-break: break-all; }
+aside a { color: var(--hl); cursor: pointer; text-decoration: none; word-break: break-all; }
 aside a:hover { text-decoration: underline; }
-.badge { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 6px; margin-left: 4px; }
-.badge.changed { background: var(--changed-bg); color: var(--changed-bd); }
-.badge.aff { background: var(--aff-bg); color: var(--aff-bd); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.actions a.plain { font-size: 13px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+.hint { color: var(--muted); }
+.badge { display: inline-block; font-size: 11px; line-height: 16px; padding: 0 6px; border-radius: 6px; margin-left: 6px; font-weight: 500; }
+.badge.h0 { background: var(--changed-bg); color: var(--changed-bd); }
+.badge.h1, .badge.h2 { background: var(--aff-bg); color: var(--aff-bd); }
+.badge.focus { background: var(--hl); color: var(--panel); }
+pre.code { background: var(--code-bg); border-radius: 8px; padding: 8px 0; margin: 6px 0 0; font: 11.5px/1.55 var(--mono); overflow-x: auto; max-height: 420px; }
+pre.code div { padding: 0 10px 0 0; white-space: pre; }
+pre.code div.chg { background: var(--code-chg); }
+pre.code .ln { display: inline-block; width: 44px; padding-right: 10px; text-align: right; color: var(--muted); user-select: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); padding: 6px 16px; border-top: 1px solid var(--border); }
 .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; border: 1px solid; }
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; }
+.overlay > div { pointer-events: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; max-width: 420px; }
+.busy { position: absolute; top: 10px; left: 12px; z-index: 5; font-size: 12px; color: var(--muted); }
 .note { padding: 24px; color: var(--muted); }
-.hint { color: var(--muted); }
+
+/* graph */
+.react-flow { background: var(--bg); }
+.react-flow__edge { pointer-events: none; }
+.react-flow__handle { opacity: 0; width: 1px; height: 1px; min-width: 0; min-height: 0; border: 0; }
+.react-flow__node { cursor: pointer; }
+.card { width: 100%; height: 100%; background: var(--sym); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; justify-content: center; transition: opacity .15s, box-shadow .15s; }
+.card:hover, .box-head:hover { box-shadow: 0 0 0 1.5px var(--hl); }
+.top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.name { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmeta { font-size: 11px; color: var(--muted); white-space: nowrap; display: flex; align-items: center; }
+.kind { font: 600 9.5px/14px var(--mono); padding: 0 4px; border-radius: 4px; border: 1px solid currentColor; flex: none; text-transform: uppercase; letter-spacing: .02em; }
+.k-package { color: var(--k-pkg); } .k-module { color: var(--k-mod); } .k-class { color: var(--k-cls); } .k-function, .k-method { color: var(--k-fn); }
+.box { width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 10px; transition: opacity .15s; }
+.box.package { background: var(--pkg); border-style: dashed; }
+.box.module { background: var(--mod); }
+.box.class { background: var(--cls); }
+.box-head { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 10px 10px 0 0; }
+.box-head .cmeta { margin-left: 2px; }
+.card.h0 { background: var(--changed-bg); border-color: var(--changed-bd); border-width: 1.5px; }
+.card.h1 { background: var(--aff-bg); border-color: var(--aff-bd); border-width: 1.5px; }
+.card.h2 { background: var(--aff2-bg); border-color: var(--aff-bd); }
+.box.h0 { border-color: var(--changed-bd); }
+.box.h1, .box.h2 { border-color: var(--aff-bd); }
+.box.h0 .box-head { background: var(--changed-bg); }
+.box.h1 .box-head, .box.h2 .box-head { background: var(--aff2-bg); }
+.sel.card, .sel.box { box-shadow: 0 0 0 2.5px var(--hl); }
+.focused.card, .focused.box { box-shadow: 0 0 0 2.5px var(--hl); }
+.dim { opacity: .38; }
+.faded { opacity: .3; }
+.react-flow__edge-path { stroke: var(--edge); stroke-width: 1.3; fill: none; }
+.react-flow__edge.references .react-flow__edge-path { stroke-dasharray: 2 3; }
+.react-flow__edge.imports .react-flow__edge-path { stroke-dasharray: 6 4; stroke-width: 1; }
+.react-flow__edge.hot .react-flow__edge-path { stroke: var(--aff-bd); stroke-width: 1.8; }
+.react-flow__edge.hl .react-flow__edge-path { stroke: var(--hl); stroke-width: 2.2; }
+.react-flow__edge.faded { opacity: .12; }
+.react-flow__edge.dimmed { opacity: .35; }
+.react-flow__edge-textbg { fill: var(--panel); }
+.react-flow__edge-text { fill: var(--text); font-size: 10px; }
+#cm-defs .base { fill: var(--edge); } #cm-defs .hot { fill: var(--aff-bd); } #cm-defs .hl { fill: var(--hl); }
+.react-flow__minimap { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; }
+.react-flow__minimap-mask { fill: var(--bg); fill-opacity: .6; }
+.react-flow__minimap-node { fill: var(--muted); stroke: none; }
+.react-flow__minimap-node.h0 { fill: var(--changed-bd); }
+.react-flow__minimap-node.h1, .react-flow__minimap-node.h2 { fill: var(--aff-bd); }
+.react-flow__minimap-node.box { fill: none; stroke: var(--border); stroke-width: 4; }
+.react-flow__minimap-node.box.h0 { stroke: var(--changed-bd); }
+.react-flow__minimap-node.box.h1, .react-flow__minimap-node.box.h2 { stroke: var(--aff-bd); }
+.react-flow__controls { box-shadow: none; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.react-flow__controls-button { background: var(--panel); border-bottom: 1px solid var(--border); }
+.react-flow__controls-button svg { fill: var(--text); }
+.react-flow__background { background: var(--bg); }
+.react-flow__background circle { fill: var(--border); }
+.react-flow__attribution { background: transparent; }
+.react-flow__attribution a { color: var(--muted); }
 @media (max-width: 760px) {
   main { flex-direction: column; }
-  #cy { min-height: 65vh; }
+  .canvas { min-height: 65vh; }
   aside { width: auto; border-left: 0; border-top: 1px solid var(--border); }
 }
 </style>
 </head>
 <body>
-<header>
-  <h1 id="title">codemap</h1>
-  <p class="summary" id="summary"></p>
-  <p class="summary pr" id="prsummary" hidden></p>
-</header>
-<div class="controls">
-  <div class="seg" id="levels" role="group" aria-label="Zoom level">
-    <button data-l="package">Packages</button>
-    <button data-l="module">Modules</button>
-    <button data-l="class">Classes</button>
-    <button data-l="function">Functions</button>
-  </div>
-  <label class="chk" id="prwrap" hidden><input type="checkbox" id="pr" checked> PR mode</label>
-  <label class="chk" id="blastwrap" hidden><input type="checkbox" id="blast"> Blast radius only</label>
-  <label class="chk"><input type="checkbox" id="imports"> Show imports</label>
-  <input type="search" id="search" list="ids" placeholder="Find a symbol, e.g. get_features">
-  <datalist id="ids"></datalist>
-  <button class="plain" id="fit">Fit</button>
-</div>
-<main>
-  <div id="cy"></div>
-  <aside id="info"><p class="hint">Click a box to see what it calls and what calls it. Double-click a box to open or close it.</p></aside>
-</main>
-<div class="legend">
-  <span><span class="sw" style="background:var(--changed-bg);border-color:var(--changed-bd)"></span>changed</span>
-  <span><span class="sw" style="background:var(--aff-bg);border-color:var(--aff-bd)"></span>caller, 1 hop</span>
-  <span><span class="sw" style="background:var(--aff2-bg);border-color:var(--aff-bd)"></span>caller, 2+ hops</span>
-  <span>solid arrow = calls · dotted = passed as a value · dashed = imports · number = call sites folded together</span>
-</div>
+<svg id="cm-defs" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="cm-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="base" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="cm-a-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hot" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="cm-a-hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hl" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+<div id="app"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/umd/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
 <script>
 const D = /*DATA*/null;
+
+if (typeof React === 'undefined' || typeof ReactFlow === 'undefined' || typeof ELK === 'undefined') {
+  document.getElementById('app').innerHTML =
+    '<p class="note">The graph needs React, React Flow and ELK from a CDN. Check the network connection and reload.</p>';
+  throw new Error('codemap: libraries missing');
+}
+
+const {createElement: h, useState, useEffect, useMemo, useRef} = React;
+const RF = window.ReactFlow;
+const Flow = RF.ReactFlow || RF.default;
+const {ReactFlowProvider, Handle, Position, BaseEdge, MiniMap, Controls, Background} = RF;
+
+// ---- the tree ---------------------------------------------------------------
+
 const RANK = {package: 0, module: 1, class: 2, function: 3, method: 3};
 const LEVEL = {package: 0, module: 1, class: 2, function: 3};
+const TAG = {package: 'pkg', module: 'mod', class: 'cls', function: 'fn', method: 'fn'};
+const LIMIT = 700;  // boxes beyond which ELK takes seconds; we ask first
 const byId = new Map(D.nodes.map(n => [n.id, n]));
 const kids = new Map();
 for (const n of D.nodes) if (n.parent) { if (!kids.has(n.parent)) kids.set(n.parent, []); kids.get(n.parent).push(n.id); }
+const roots = D.nodes.filter(n => !n.parent).map(n => n.id);
 const hops = (D.diff && D.diff.hops) || {};
-const $ = id => document.getElementById(id);
+const sources = D.sources || {};
 
-// Start zoomed out enough to stay readable.
-const nMods = D.nodes.filter(n => n.kind === 'module').length;
-let level = nMods > 40 ? 'package' : nMods > 12 ? 'module' : 'function';
-let expanded = new Set(), collapsed = new Set(), sel = null, cy = null;
-let pr = !!D.diff, blastOnly = false, showImports = false;
+function chain(id) { const c = []; while (id) { c.push(id); id = byId.get(id).parent; } return c; }
+function inside(id) { const s = new Set([id]), st = [id]; while (st.length) for (const k of kids.get(st.pop()) || []) { s.add(k); st.push(k); } return s; }
 
-$('title').textContent = 'codemap · ' + D.repo;
-document.title = 'Codemap · ' + D.repo;
-$('summary').textContent = D.summary;
-if (D.diff) {
-  $('prsummary').hidden = false;
-  $('prsummary').textContent = `Since ${D.diff.base}: ${D.diff.summary}`;
-  $('prwrap').hidden = $('blastwrap').hidden = false;
-}
-
-// Subtree minimum hop: a box is affected if anything inside it is.
 const subHop = new Map();
-function hopOf(id) {
+function hopOf(id) {  // a box is affected if anything inside it is
   if (subHop.has(id)) return subHop.get(id);
-  let h = id in hops ? hops[id] : undefined;
-  for (const k of kids.get(id) || []) { const kh = hopOf(k); if (kh !== undefined && (h === undefined || kh < h)) h = kh; }
-  subHop.set(id, h);
-  return h;
+  let v = id in hops ? hops[id] : undefined;
+  for (const k of kids.get(id) || []) { const kh = hopOf(k); if (kh !== undefined && (v === undefined || kh < v)) v = kh; }
+  subHop.set(id, v);
+  return v;
 }
 const symCount = new Map();
 function symbols(id) {
@@ -142,182 +204,426 @@ function symbols(id) {
   symCount.set(id, c);
   return c;
 }
+const TEST = /^(tests?|testing|conftest)$|^test_|_tests?$/;
+const isTest = id => id.split('.').some(p => TEST.test(p));
+const hasTests = D.nodes.some(n => n.kind === 'module' && isTest(n.id));
 
-function isOpen(id) {
-  if (expanded.has(id)) return true;
-  if (collapsed.has(id)) return false;
-  return RANK[byId.get(id).kind] < LEVEL[level];
-}
-function chain(id) { const c = []; while (id) { c.push(id); id = byId.get(id).parent; } return c; }
-// The box that stands for id at the current zoom: its highest closed ancestor, or itself.
-function rep(id) { const c = chain(id); for (let i = c.length - 1; i > 0; i--) if (!isOpen(c[i])) return c[i]; return c[0]; }
-function shown(id) {
-  const c = chain(id);
-  for (let i = 1; i < c.length; i++) if (!isOpen(c[i])) return false;
-  return !(pr && blastOnly && hopOf(id) === undefined);
+// Neighbours for focus mode, both directions.
+const adj = new Map();
+for (const [s, t, kind] of D.edges) {
+  for (const [a, b] of [[s, t], [t, s]]) { if (!adj.has(a)) adj.set(a, []); adj.get(a).push([b, kind]); }
 }
 
-function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-function style() {
-  const c = n => css(n);
-  return [
-    {selector: 'node', style: {
-      'label': 'data(label)', 'font-size': 11, 'color': c('--text'), 'text-wrap': 'wrap', 'text-max-width': 200,
-      'text-valign': 'center', 'text-halign': 'center', 'shape': 'round-rectangle',
-      'width': 'label', 'height': 'label', 'padding': '8px',
-      'background-color': c('--sym'), 'border-width': 1, 'border-color': c('--border')}},
-    {selector: 'node[kind="package"]', style: {'background-color': c('--pkg'), 'border-style': 'dashed', 'font-weight': 600}},
-    {selector: 'node[kind="module"]', style: {'background-color': c('--mod')}},
-    {selector: 'node[kind="class"]', style: {'background-color': c('--cls')}},
-    {selector: ':parent', style: {'text-valign': 'top', 'text-halign': 'center', 'text-margin-y': -4, 'padding': '14px', 'font-size': 12}},
-    {selector: 'node[st="h0"]', style: {'background-color': c('--changed-bg'), 'border-color': c('--changed-bd'), 'border-width': 1.5}},
-    {selector: 'node[st="h1"]', style: {'background-color': c('--aff-bg'), 'border-color': c('--aff-bd'), 'border-width': 1.5}},
-    {selector: 'node[st="h2"]', style: {'background-color': c('--aff2-bg'), 'border-color': c('--aff-bd')}},
-    {selector: ':parent[st="h1"], :parent[st="h2"], :parent[st="h0"]', style: {'background-opacity': 0.55}},
-    {selector: 'node.dim', style: {'opacity': 0.35}},
-    {selector: 'node:selected', style: {'border-color': c('--accent'), 'border-width': 2.5}},
-    {selector: 'edge', style: {
-      'curve-style': 'bezier', 'width': 1.2, 'line-color': c('--edge'), 'target-arrow-color': c('--edge'),
-      'target-arrow-shape': 'triangle', 'arrow-scale': 0.8, 'label': 'data(lbl)', 'font-size': 10, 'color': c('--text'),
-      'text-background-color': c('--panel'), 'text-background-opacity': 1, 'text-background-padding': 2}},
-    {selector: 'edge[kind="references"]', style: {'line-style': 'dotted'}},
-    {selector: 'edge[kind="imports"]', style: {'line-style': 'dashed', 'width': 1}},
-    {selector: 'edge.hot', style: {'line-color': c('--aff-bd'), 'target-arrow-color': c('--aff-bd'), 'width': 1.8}},
-    {selector: 'edge.dim', style: {'opacity': 0.25}},
-  ];
-}
-
-function elements() {
-  const vis = new Set(D.nodes.filter(n => shown(n.id)).map(n => n.id));
-  const els = [];
-  for (const id of vis) {
-    const n = byId.get(id), h = pr ? hopOf(id) : undefined;
-    const open = isOpen(id) && (kids.get(id) || []).some(k => vis.has(k));
-    const count = symbols(id);
-    let label = n.kind === 'package' ? n.label + '/' : n.label;
-    if (!open && (n.kind === 'package' || n.kind === 'module' || n.kind === 'class') && count) label += `\n${count} symbol${count > 1 ? 's' : ''}`;
-    if (!open && h > 0) label += `\nhop ${h}`;
-    els.push({group: 'nodes', classes: pr && h === undefined ? 'dim' : '',
-      data: {id, label, kind: n.kind, parent: n.parent && vis.has(n.parent) ? n.parent : undefined,
-             st: h === undefined ? '' : 'h' + Math.min(h, 2)}});
+function focusSet(st) {
+  const start = [...inside(st.focus)];
+  const keep = id => !st.hideTests || !isTest(id) || isTest(st.focus);
+  const seen = new Set(start);
+  let frontier = start;
+  for (let d = 0; d < st.depth; d++) {
+    const next = [];
+    for (const id of frontier) for (const [o, kind] of adj.get(id) || []) {
+      if (kind === 'imports' && !st.imports) continue;
+      if (!seen.has(o) && keep(o)) { seen.add(o); next.push(o); }
+    }
+    frontier = next;
   }
+  return seen;
+}
+
+// What is on screen: visible ids, which of them are open boxes, and folded edges.
+function computeView(st) {
+  let include, open;
+  if (st.focus) {
+    const I = focusSet(st), anc = new Set();
+    for (const id of I) for (const a of chain(id).slice(1)) anc.add(a);
+    include = id => I.has(id) || anc.has(id);
+    open = id => anc.has(id);
+  } else {
+    include = id => !(st.hideTests && isTest(id)) && !(st.pr && st.blastOnly && hopOf(id) === undefined);
+    open = id => st.expanded.has(id) || (!st.collapsed.has(id) && RANK[byId.get(id).kind] < LEVEL[st.level]);
+  }
+  const vis = [], visSet = new Set();
+  const walk = id => {
+    if (!include(id)) return;
+    vis.push(id); visSet.add(id);
+    if (open(id)) for (const k of kids.get(id) || []) walk(k);
+  };
+  roots.forEach(walk);
+  const box = new Set(vis.filter(id => open(id) && (kids.get(id) || []).some(k => visSet.has(k))));
+  const rep = id => {
+    const c = chain(id);
+    for (let i = c.length - 1; i > 0; i--) {
+      if (!visSet.has(c[i])) return null;
+      if (!box.has(c[i])) return c[i];
+    }
+    return visSet.has(c[0]) ? c[0] : null;
+  };
   const agg = new Map();
   for (const [s, t, kind, c] of D.edges) {
-    if (kind === 'imports' && !showImports) continue;
+    if (kind === 'imports' && !st.imports) continue;
     const a = rep(s), b = rep(t);
-    if (a === b || !vis.has(a) || !vis.has(b)) continue;
-    if (chain(a).includes(b) || chain(b).includes(a)) continue;  // box to its own content
+    if (!a || !b || a === b) continue;
+    if (chain(a).includes(b) || chain(b).includes(a)) continue;  // a box and its own contents
     const key = a + '\u0000' + b + '\u0000' + kind;
     agg.set(key, (agg.get(key) || 0) + c);
   }
-  for (const [key, c] of agg) {
-    const [a, b, kind] = key.split('\u0000');
-    const hot = pr && hopOf(a) !== undefined && hopOf(b) !== undefined;
-    els.push({group: 'edges', classes: pr ? (hot ? 'hot' : 'dim') : '',
-      data: {id: 'e' + key, source: a, target: b, kind, lbl: c > 1 ? String(c) : ''}});
+  const edges = [...agg].map(([key, count]) => { const [a, b, kind] = key.split('\u0000'); return {id: key, a, b, kind, count}; });
+  return {vis, box, edges, rep};
+}
+
+// ---- sizes and layout ---------------------------------------------------------
+
+const ctx = document.createElement('canvas').getContext('2d');
+const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+function textW(s, font) { ctx.font = font; return ctx.measureText(s).width; }
+
+function metaText(id) {
+  const n = byId.get(id), c = symbols(id);
+  if (n.kind === 'function' || n.kind === 'method') return n.loc ? `${n.loc} lines` : '';
+  if (n.kind === 'class') return `${c - 1} method${c === 2 ? '' : 's'}`;
+  return `${c} symbol${c === 1 ? '' : 's'}`;
+}
+function label(id) { const n = byId.get(id); return n.kind === 'package' ? n.label + '/' : n.label; }
+
+const elk = new ELK();
+const ROOT_OPTS = {
+  'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+  'elk.edgeRouting': 'ORTHOGONAL',
+  'elk.layered.spacing.nodeNodeBetweenLayers': '56', 'elk.spacing.nodeNode': '18',
+  'elk.layered.spacing.edgeNodeBetweenLayers': '18', 'elk.spacing.edgeNode': '14', 'elk.spacing.edgeEdge': '8',
+  'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF', 'elk.spacing.componentComponent': '36',
+};
+
+async function layout(view) {
+  const nodes = new Map(), root = {id: '__root', layoutOptions: ROOT_OPTS, children: [], edges: []};
+  for (const id of view.vis) {
+    const n = byId.get(id), lw = textW(label(id), `600 12px ${FONT}`), mw = textW(metaText(id), `11px ${FONT}`);
+    const e = {id, children: []}, badge = D.diff && hopOf(id) !== undefined ? 62 : 0;
+    if (view.box.has(id)) {  // tag, name, meta and badge share the header
+      e.layoutOptions = {'elk.padding': '[top=42,left=14,bottom=14,right=14]',
+        'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': `(${Math.ceil(lw + mw + badge + 72)},60)`};
+    } else {  // tag and name on top, meta and badge below
+      e.width = Math.min(320, Math.max(120, Math.ceil(Math.max(lw + 62, mw + badge + 26))));
+      e.height = 50;
+    }
+    nodes.set(id, e);
+    (n.parent && nodes.has(n.parent) ? nodes.get(n.parent) : root).children.push(e);
   }
-  return els;
-}
-
-function render() {
-  const els = elements();
-  if (!cy) {
-    cy = cytoscape({container: $('cy'), elements: els, style: style(), wheelSensitivity: 0.3, minZoom: 0.05, maxZoom: 3});
-    cy.on('tap', 'node', e => select(e.target.id()));
-    cy.on('dbltap', 'node', e => toggle(e.target.id()));
-    cy.on('tap', e => { if (e.target === cy) clearSel(); });
-  } else {
-    cy.elements().remove();
-    cy.add(els);
+  for (const ed of view.edges) {  // ELK wants each edge in the deepest box holding both ends
+    const up = new Set(chain(ed.a).slice(1));
+    const lca = chain(ed.b).slice(1).find(x => up.has(x) && nodes.has(x));
+    (lca ? nodes.get(lca) : root).edges = [...((lca ? nodes.get(lca) : root).edges || []), {id: ed.id, sources: [ed.a], targets: [ed.b]}];
   }
-  try {
-    cy.layout({name: 'dagre', rankDir: 'LR', nodeSep: 40, rankSep: 80, edgeSep: 10, padding: 24, animate: false}).run();
-  } catch (_) {  // dagre failed to load
-    cy.layout({name: 'cose', animate: false, padding: 24}).run();
+  const res = await elk.layout(root);
+
+  const out = [], abs = new Map();
+  const walk = (n, parent, ox, oy) => {
+    for (const c of n.children || []) {
+      const ax = ox + c.x, ay = oy + c.y;
+      abs.set(c.id, {x: ax, y: ay, w: c.width, h: c.height});
+      out.push({id: c.id, parent, x: c.x, y: c.y, w: c.width, h: c.height});
+      walk(c, c.id, ax, ay);
+    }
+  };
+  walk(res, undefined, 0, 0);
+  const pts = new Map();
+  const walkE = (n, ox, oy) => {  // edge points are relative to the box holding the edge
+    for (const e of n.edges || []) {
+      const s = e.sections && e.sections[0];
+      if (s) pts.set(e.id, [s.startPoint, ...(s.bendPoints || []), s.endPoint].map(q => ({x: q.x + ox, y: q.y + oy})));
+    }
+    for (const c of n.children || []) walkE(c, ox + c.x, oy + c.y);
+  };
+  walkE(res, 0, 0);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const b of abs.values()) { x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.w); y1 = Math.max(y1, b.y + b.h); }
+  const bounds = abs.size ? {x: x0, y: y0, width: x1 - x0, height: y1 - y0} : null;
+  return {nodes: out, abs, pts, bounds};
+}
+
+// ---- graph components ------------------------------------------------------------
+
+function Handles() {
+  return [h(Handle, {key: 't', type: 'target', position: Position.Left, isConnectable: false}),
+          h(Handle, {key: 's', type: 'source', position: Position.Right, isConnectable: false})];
+}
+function Badge({hop, focus}) {
+  if (focus) return h('span', {className: 'badge focus'}, 'focus');
+  if (hop === undefined) return null;
+  return h('span', {className: 'badge h' + Math.min(hop, 2)}, hop === 0 ? 'changed' : 'hop ' + hop);
+}
+function Card({data}) {
+  return h('div', {className: 'card ' + data.cls, title: data.id},
+    ...Handles(),
+    h('div', {className: 'top'}, h('span', {className: 'kind k-' + data.kind}, TAG[data.kind]), h('span', {className: 'name'}, data.label)),
+    h('div', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus})));
+}
+function Box({data}) {
+  return h('div', {className: 'box ' + data.kind + ' ' + data.cls, title: data.id},
+    ...Handles(),
+    h('div', {className: 'box-head'},
+      h('span', {className: 'kind k-' + data.kind}, TAG[data.kind]),
+      h('span', {className: 'name'}, data.label),
+      h('span', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus}))));
+}
+function FlowEdge({id, data, markerEnd}) {
+  const p = data.points;
+  if (!p) return null;
+  const path = 'M' + p.map(q => `${q.x},${q.y}`).join(' L');
+  let best = 0, lx = p[0].x, ly = p[0].y;
+  for (let i = 1; i < p.length; i++) {  // label the longest segment
+    const len = Math.abs(p[i].x - p[i - 1].x) + Math.abs(p[i].y - p[i - 1].y);
+    if (len > best) { best = len; lx = (p[i].x + p[i - 1].x) / 2; ly = (p[i].y + p[i - 1].y) / 2; }
   }
-  if (cy.zoom() > 1.2) { cy.zoom(1.2); cy.center(); }  // keep small graphs at reading size
-  if (sel && cy.getElementById(sel).length) cy.getElementById(sel).select();
-  document.querySelectorAll('#levels button').forEach(b => b.classList.toggle('on', b.dataset.l === level));
+  return h(BaseEdge, {id, path, markerEnd, interactionWidth: 0,
+    label: data.count > 1 ? String(data.count) : undefined, labelX: lx, labelY: ly,
+    labelShowBg: true, labelBgPadding: [3, 1], labelBgBorderRadius: 3});
 }
+const nodeTypes = {card: Card, box: Box};
+const edgeTypes = {flow: FlowEdge};
 
-function toggle(id) {
-  if (!(kids.get(id) || []).length) return;
-  if (isOpen(id)) { expanded.delete(id); collapsed.add(id); } else { collapsed.delete(id); expanded.add(id); }
-  render();
-  select(id);
-}
-function reveal(id) {
-  for (const a of chain(id).slice(1)) { collapsed.delete(a); expanded.add(a); }
-  if (pr && blastOnly && hopOf(id) === undefined) { blastOnly = false; $('blast').checked = false; }
-  render();
-  select(id);
-  const el = cy.getElementById(id);
-  if (el.length) cy.animate({center: {eles: el}, zoom: Math.max(cy.zoom(), 0.9)}, {duration: 300});
-}
-function clearSel() {
-  sel = null;
-  $('info').innerHTML = '<p class="hint">Click a box to see what it calls and what calls it. Double-click a box to open or close it.</p>';
-}
+// ---- side panel ---------------------------------------------------------------------
 
-function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c])); }
-function inside(id) { const s = new Set([id]); const st = [id]; while (st.length) for (const k of kids.get(st.pop()) || []) { s.add(k); st.push(k); } return s; }
-
-function select(id) {
-  sel = id;
-  const n = byId.get(id), mine = inside(id);
-  const out = new Map(), inn = new Map();
+const changedLines = file => ((D.diff && D.diff.lines) || {})[file] || [];
+function Code({node}) {
+  const text = node.file && sources[node.file];
+  if (!text || node.kind === 'package') return null;
+  const all = text.split('\n');
+  const from = node.kind === 'module' ? 1 : node.line || 1;
+  const to = node.kind === 'module' ? Math.min(all.length, 60) : Math.min(node.end || from, from + 299);
+  const spans = changedLines(node.file);
+  const rows = [];
+  for (let i = from; i <= to; i++) {
+    const chg = spans.some(([a, b]) => i >= a && i <= b);
+    rows.push(h('div', {key: i, className: chg ? 'chg' : ''}, h('span', {className: 'ln'}, i), all[i - 1]));
+  }
+  const cut = node.kind === 'module' ? all.length > 60 : (node.end || from) > to;
+  return [h('h3', {key: 'h'}, node.kind === 'module' ? 'Source (top of file)' : 'Source'),
+          h('pre', {key: 'c', className: 'code'}, rows),
+          cut ? h('p', {key: 'm', className: 'hint'}, 'Cut short; open the file for the rest.') : null];
+}
+function Links({m, go, st}) {
+  if (!m.size) return h('p', {className: 'hint'}, 'none');
+  const rows = [...m].sort((x, y) => y[1] - x[1]);
+  return h('ul', null, rows.slice(0, 40).map(([k, c]) => {
+    const [other, kind] = k.split('|');
+    return h('li', {key: k},
+      h('a', {onClick: () => go(other)}, other),
+      c > 1 ? ' ×' + c : '',
+      kind !== 'calls' ? h('span', {className: 'hint'}, ` (${kind})`) : null,
+      st.pr ? h(Badge, {hop: hops[other]}) : null);
+  }), rows.length > 40 ? h('li', {className: 'hint'}, `and ${rows.length - 40} more`) : null);
+}
+function Info({id, st, act}) {
+  if (!id) return h('div', null,
+    h('p', {className: 'hint'}, 'Click a box to see its code, what it calls and what calls it.'),
+    h('p', {className: 'hint'}, 'Double-click a box to open or close it. Focus shows one symbol with only its callers and callees.'),
+    D.errors && D.errors.length ? h('p', {className: 'hint'}, `${D.errors.length} files failed to parse: ${D.errors.slice(0, 5).join(', ')}`) : null);
+  const n = byId.get(id), mine = inside(id), out = new Map(), inn = new Map();
   for (const [s, t, kind, c] of D.edges) {
     if (mine.has(s) && !mine.has(t)) { const k = t + '|' + kind; out.set(k, (out.get(k) || 0) + c); }
     if (mine.has(t) && !mine.has(s)) { const k = s + '|' + kind; inn.set(k, (inn.get(k) || 0) + c); }
   }
-  const list = m => {
-    if (!m.size) return '<p class="hint">none</p>';
-    const rows = [...m].sort((x, y) => y[1] - x[1]).slice(0, 40).map(([k, c]) => {
-      const [other, kind] = k.split('|');
-      const tag = kind === 'calls' ? '' : ` <span class="hint">(${kind})</span>`;
-      const h = pr ? hops[other] : undefined;
-      const b = h === 0 ? '<span class="badge changed">changed</span>' : h > 0 ? `<span class="badge aff">hop ${h}</span>` : '';
-      return `<li><a data-go="${esc(other)}">${esc(other)}</a>${c > 1 ? ' ×' + c : ''}${tag}${b}</li>`;
-    });
-    return `<ul>${rows.join('')}</ul>${m.size > 40 ? `<p class="hint">and ${m.size - 40} more</p>` : ''}`;
-  };
-  const where = n.file ? `${n.file}${n.line && n.kind !== 'module' ? ':' + n.line : ''}` : 'directory';
-  const h = pr ? hopOf(id) : undefined;
-  const badge = h === 0 ? '<span class="badge changed">changed</span>' : h > 0 ? `<span class="badge aff">affected, hop ${h}</span>` : '';
+  const where = n.file ? n.file + (n.line && n.kind !== 'module' ? ':' + n.line : '') : 'directory';
   const kidsN = (kids.get(id) || []).length;
-  const unres = n.kind === 'module' && D.unresolved[id] ? `<p class="meta">${D.unresolved[id]} calls go to stdlib, third-party or dynamic code</p>` : '';
-  $('info').innerHTML = `
-    <h2>${esc(n.label)}${badge}</h2>
-    <p class="meta">${n.kind} · ${esc(where)}${n.loc ? ' · ' + n.loc + ' lines' : ''}</p>
-    <p class="meta">${esc(id)}</p>${unres}
-    ${kidsN ? `<button class="plain" id="tog">${isOpen(id) ? 'Close' : 'Open'} (${kidsN} inside)</button>` : ''}
-    <h3>Calls out</h3>${list(out)}
-    <h3>Called by</h3>${list(inn)}`;
-  if (kidsN) $('tog').onclick = () => toggle(id);
-  $('info').querySelectorAll('a[data-go]').forEach(a => a.onclick = () => reveal(a.dataset.go));
-  if (cy) { cy.$(':selected').unselect(); const el = cy.getElementById(rep(id)); if (el.length) el.select(); }
+  const editor = n.file && D.root ? `vscode://file/${D.root}/${n.file}:${n.line || 1}` : null;
+  return h('div', null,
+    h('h2', null, n.label, st.pr ? h(Badge, {hop: hopOf(id)}) : null),
+    h('p', {className: 'meta'}, `${n.kind} · ${where}${n.loc ? ' · ' + n.loc + ' lines' : ''}`),
+    h('p', {className: 'meta'}, id),
+    n.kind === 'module' && D.unresolved[id] ? h('p', {className: 'meta'}, `${D.unresolved[id]} calls go to stdlib, third-party or dynamic code`) : null,
+    h('div', {className: 'actions'},
+      st.focus === id ? h('button', {className: 'plain', onClick: () => act.focus(null)}, 'Exit focus')
+                      : h('button', {className: 'plain', onClick: () => act.focus(id)}, 'Focus'),
+      kidsN && !st.focus ? h('button', {className: 'plain', onClick: () => act.toggle(id)}, `Open or close (${kidsN} inside)`) : null,
+      editor ? h('a', {className: 'plain', href: editor}, 'Open in VS Code') : null),
+    h(Code, {node: n}),
+    h('h3', null, 'Calls out'), h(Links, {m: out, go: act.go, st}),
+    h('h3', null, 'Called by'), h(Links, {m: inn, go: act.go, st}));
 }
 
-document.querySelectorAll('#levels button').forEach(b => b.onclick = () => {
-  level = b.dataset.l; expanded = new Set(); collapsed = new Set(); render();
-});
-$('pr').onchange = e => { pr = e.target.checked; render(); if (sel) select(sel); };
-$('blast').onchange = e => { blastOnly = e.target.checked; render(); };
-$('imports').onchange = e => { showImports = e.target.checked; render(); };
-$('fit').onclick = () => cy && cy.fit(undefined, 24);
-$('ids').innerHTML = D.nodes.filter(n => n.kind !== 'package').slice(0, 5000).map(n => `<option value="${esc(n.id)}">`).join('');
-$('search').onchange = e => {
-  const q = e.target.value.trim();
-  const hit = byId.get(q) || D.nodes.find(n => n.label === q || n.id.endsWith('.' + q));
-  if (hit) reveal(hit.id);
-};
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => requestAnimationFrame(() => cy && cy.style().fromJson(style()).update()));
+// ---- app ------------------------------------------------------------------------------
 
-if (typeof cytoscape === 'undefined') {
-  $('cy').innerHTML = '<p class="note">The graph needs Cytoscape from cdnjs. Check the network connection and reload.</p>';
-} else {
-  render();
+const nMods = D.nodes.filter(n => n.kind === 'module').length;
+
+function App() {
+  const [st, setSt] = useState({
+    level: nMods > 40 ? 'package' : nMods > 12 ? 'module' : 'function',
+    expanded: new Set(), collapsed: new Set(),
+    pr: !!D.diff, blastOnly: false, imports: false, hideTests: hasTests,
+    focus: null, depth: 1, force: false,
+  });
+  const [sel, setSel] = useState(null);
+  const [hover, setHover] = useState(null);
+  const [lay, setLay] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState('');
+  const rf = useRef(null), after = useRef({fit: true});
+  const set = patch => setSt(s => ({...s, ...patch}));
+
+  const view = useMemo(() => computeView(st), [st]);
+  const tooBig = view.vis.length > LIMIT && !st.force;
+
+  useEffect(() => {
+    if (tooBig) { setLay(null); return; }
+    let live = true;
+    setBusy(true);
+    layout(view).then(r => { if (live) { setLay({...r, view}); setBusy(false); } })
+      .catch(e => { console.error(e); if (live) setBusy(false); });
+    return () => { live = false; };
+  }, [view, tooBig]);
+
+  useEffect(() => {  // move the camera once the new layout is on screen
+    if (!lay || !rf.current) return;
+    const a = after.current; after.current = {};
+    requestAnimationFrame(() => {
+      const box = a.center && lay.abs.get(lay.view.rep(a.center) || a.center);
+      if (box) rf.current.setCenter(box.x + box.w / 2, box.y + Math.min(box.h / 2, 200), {zoom: Math.max(rf.current.getZoom(), 0.85), duration: 300});
+      else if (a.fit) fit(lay, 200);
+    });
+  }, [lay]);
+
+  const fit = (l, duration) => {  // from ELK's sizes, so it works before React Flow measures the nodes
+    if (!l || !l.bounds || !rf.current) return;
+    const b = l.bounds, el = document.querySelector('.react-flow').getBoundingClientRect();
+    const zoom = Math.max(0.03, Math.min(1.1, el.width / (b.width * 1.12), el.height / (b.height * 1.12)));
+    rf.current.setCenter(b.x + b.width / 2, b.y + b.height / 2, {zoom, duration});
+  };
+
+  const act = {
+    toggle(id) {
+      if (!(kids.get(id) || []).length || st.focus) return;
+      const e = new Set(st.expanded), c = new Set(st.collapsed);
+      if (view.box.has(id)) { e.delete(id); c.add(id); } else { c.delete(id); e.add(id); }
+      after.current = {center: id};
+      set({expanded: e, collapsed: c});
+      setSel(id);
+    },
+    focus(id) {
+      after.current = {fit: true};
+      set({focus: id});
+      if (id) setSel(id);
+    },
+    go(id) {  // follow a link from the side panel or the search box
+      setSel(id);
+      if (st.focus) { after.current = {fit: true}; set({focus: id}); return; }
+      const e = new Set(st.expanded), c = new Set(st.collapsed);
+      for (const a of chain(id).slice(1)) { c.delete(a); e.add(a); }
+      const patch = {expanded: e, collapsed: c};
+      if (st.hideTests && isTest(id)) patch.hideTests = false;
+      if (st.pr && st.blastOnly && hopOf(id) === undefined) patch.blastOnly = false;
+      after.current = {center: id};
+      set(patch);
+    },
+  };
+
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') { if (st.focus) act.focus(null); else setSel(null); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  // Highlight what touches the hovered or selected box.
+  const hl = hover || (sel && lay ? lay.view.rep(sel) : null);
+  const near = useMemo(() => {
+    if (!hl || !lay) return null;
+    const s = new Set([hl]);
+    for (const e of lay.view.edges) { if (e.a === hl) s.add(e.b); if (e.b === hl) s.add(e.a); }
+    return s;
+  }, [hl, lay]);
+
+  const rfNodes = useMemo(() => {
+    if (!lay) return [];
+    const selRep = sel ? lay.view.rep(sel) : null;
+    return lay.nodes.map(n => {
+      const node = byId.get(n.id), isBox = lay.view.box.has(n.id);
+      const hop = st.pr ? hopOf(n.id) : undefined;
+      const cls = [hop !== undefined ? 'h' + Math.min(hop, 2) : (st.pr && !st.focus ? 'dim' : ''),
+                   n.id === selRep ? 'sel' : '', n.id === st.focus ? 'focused' : '',
+                   near && !isBox && !near.has(n.id) ? 'faded' : ''].join(' ');
+      return {id: n.id, type: isBox ? 'box' : 'card', position: {x: n.x, y: n.y}, parentNode: n.parent,
+              style: {width: n.w, height: n.h}, draggable: false, selectable: false, connectable: false,
+              data: {id: n.id, kind: node.kind, label: label(n.id), meta: metaText(n.id), hop, cls, focus: n.id === st.focus}};
+    });
+  }, [lay, st.pr, st.focus, sel, near]);
+
+  const rfEdges = useMemo(() => {
+    if (!lay) return [];
+    return lay.view.edges.map(e => {
+      const hot = st.pr && hopOf(e.a) !== undefined && hopOf(e.b) !== undefined;
+      const on = hl && (e.a === hl || e.b === hl);
+      const cls = [e.kind, on ? 'hl' : hot ? 'hot' : '', hl && !on ? 'faded' : (st.pr && !hot && !st.focus ? 'dimmed' : '')].join(' ');
+      return {id: e.id, source: e.a, target: e.b, type: 'flow', className: cls, zIndex: 1000,
+              markerEnd: on ? 'cm-a-hl' : hot ? 'cm-a-hot' : 'cm-a',
+              data: {points: lay.pts.get(e.id), count: e.count, kind: e.kind}};
+    });
+  }, [lay, st.pr, st.focus, hl]);
+
+  const search = q => {
+    setQuery(q);
+    const s = q.trim();
+    if (!s) return;
+    const hit = byId.get(s) || D.nodes.find(n => n.label === s || n.id.endsWith('.' + s));
+    if (hit) { act.go(hit.id); setQuery(''); }
+  };
+
+  const levels = ['package', 'module', 'class', 'function'];
+  const names = {package: 'Packages', module: 'Modules', class: 'Classes', function: 'Functions'};
+  return h(React.Fragment, null,
+    h('header', null,
+      h('h1', null, 'codemap · ' + D.repo),
+      h('p', {className: 'summary'}, D.summary),
+      D.diff ? h('p', {className: 'summary pr'}, `Since ${D.diff.base}: ${D.diff.summary}`) : null),
+    h('div', {className: 'controls'},
+      h('div', {className: 'seg', role: 'group', 'aria-label': 'Zoom level'},
+        levels.map(l => h('button', {key: l, className: !st.focus && st.level === l ? 'on' : '',
+          onClick: () => { after.current = {fit: true}; set({level: l, expanded: new Set(), collapsed: new Set(), focus: null, force: false}); }}, names[l]))),
+      st.focus ? h('span', {className: 'focuschip'}, 'Focus: ', h('b', null, byId.get(st.focus).label), ' · hops',
+        h('div', {className: 'seg'}, [1, 2, 3].map(d => h('button', {key: d, className: st.depth === d ? 'on' : '',
+          onClick: () => { after.current = {fit: true}; set({depth: d}); }}, d))),
+        h('button', {className: 'plain', onClick: () => act.focus(null), title: 'Exit focus (Esc)'}, '×')) : null,
+      D.diff ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.pr, onChange: e => set({pr: e.target.checked})}), 'PR mode') : null,
+      D.diff && !st.focus ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.blastOnly,
+        onChange: e => { after.current = {fit: true}; set({blastOnly: e.target.checked}); }}), 'Blast radius only') : null,
+      hasTests ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.hideTests,
+        onChange: e => { after.current = {fit: true}; set({hideTests: e.target.checked}); }}), 'Hide tests') : null,
+      h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.imports, onChange: e => set({imports: e.target.checked})}), 'Show imports'),
+      h('input', {type: 'search', list: 'ids', value: query, placeholder: 'Find a symbol, e.g. get_features',
+        onChange: e => search(e.target.value), onKeyDown: e => { if (e.key === 'Enter') search(e.target.value); }}),
+      h('button', {className: 'plain', onClick: () => fit(lay, 200)}, 'Fit')),
+    h('main', null,
+      h('div', {className: 'canvas'},
+        busy ? h('div', {className: 'busy'}, 'Laying out…') : null,
+        tooBig ? h('div', {className: 'overlay'}, h('div', null,
+          h('p', {style: {marginTop: 0}}, `This view holds ${view.vis.length} boxes, which takes a while to lay out.`),
+          h('p', {className: 'hint'}, 'Pick a coarser level and open packages one at a time, or focus on a symbol from the search box.'),
+          h('button', {className: 'plain', onClick: () => set({force: true})}, 'Lay it out anyway'))) : null,
+        h(Flow, {nodes: rfNodes, edges: rfEdges, nodeTypes, edgeTypes,
+          onInit: inst => { rf.current = inst; },
+          onNodeClick: (_, n) => setSel(n.id),
+          onNodeDoubleClick: (_, n) => act.toggle(n.id),
+          onNodeMouseEnter: (_, n) => setHover(n.id),
+          onNodeMouseLeave: () => setHover(null),
+          onPaneClick: () => setSel(null),
+          nodesDraggable: false, nodesConnectable: false, elementsSelectable: false,
+          zoomOnDoubleClick: false, minZoom: 0.03, maxZoom: 2.5, onlyRenderVisibleElements: true},
+          h(Background, {gap: 22, size: 1}),
+          h(Controls, {showInteractive: false}),
+          rfNodes.length > 40 && h(MiniMap, {style: {width: 170, height: 110}, pannable: true, zoomable: true, nodeClassName: n => (n.type === 'box' ? 'box ' : '') + (n.data.hop !== undefined ? 'h' + Math.min(n.data.hop, 2) : '')}))),
+      h('aside', null, h(Info, {id: sel, st, act}))),
+    h('div', {className: 'legend'},
+      D.diff ? [h('span', {key: 'c'}, h('span', {className: 'sw', style: {background: 'var(--changed-bg)', borderColor: 'var(--changed-bd)'}}), 'changed'),
+                h('span', {key: '1'}, h('span', {className: 'sw', style: {background: 'var(--aff-bg)', borderColor: 'var(--aff-bd)'}}), 'caller, 1 hop'),
+                h('span', {key: '2'}, h('span', {className: 'sw', style: {background: 'var(--aff2-bg)', borderColor: 'var(--aff-bd)'}}), 'caller, 2+ hops')] : null,
+      h('span', null, 'solid = calls · dotted = passed as a value · dashed = imports · number = call sites folded together')));
 }
+
+document.title = 'Codemap · ' + D.repo;
+const dl = document.createElement('datalist');
+dl.id = 'ids';
+dl.innerHTML = D.nodes.filter(n => n.kind !== 'package').slice(0, 5000).map(n => `<option value="${n.id.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">`).join('');
+document.body.appendChild(dl);
+ReactDOM.createRoot(document.getElementById('app')).render(h(ReactFlowProvider, null, h(App)));
 </script>
 </body>
 </html>

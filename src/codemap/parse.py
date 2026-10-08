@@ -57,6 +57,7 @@ class Index:
         self.unresolved = defaultdict(int)
         self.calls_total = 0
         self.errors = []
+        self.sources = {}               # file -> text, for the viewer's code panel
         self._exact, self._suffix = {}, defaultdict(set)
 
     # ---- pass 1: nodes, imports ------------------------------------------
@@ -87,6 +88,7 @@ class Index:
             except (SyntaxError, ValueError) as e:
                 self.errors.append(f'{rel}: {e.__class__.__name__}')
                 continue
+            self.sources[rel] = src
             self._add(mid, 'module', pkg, parts[-1] + '.py', rel, 1, max(1, src.count('\n') + 1))
             self.mods[mid] = {'tree': tree, 'file': rel, 'pkg': pkg, 'imports': {}}
             names = [mid] + ([mid[:-len('.__init__')]] if mid.endswith('.__init__') else [])
