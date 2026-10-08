@@ -410,7 +410,7 @@ function Links({m, go, st}) {
     return h('li', {key: k},
       h('a', {onClick: () => go(other)}, other),
       c > 1 ? ' ×' + c : '',
-      kind !== 'calls' ? h('span', {className: 'hint'}, ` (${kind})`) : null,
+      kind === 'references' ? h('span', {className: 'hint'}, ` (${kind})`) : null,
       st.pr ? h(Badge, {hop: hops[other]}) : null);
   }), rows.length > 40 ? h('li', {className: 'hint'}, `and ${rows.length - 40} more`) : null);
 }
@@ -419,10 +419,11 @@ function Info({id, st, act}) {
     h('p', {className: 'hint'}, 'Click a box to see its code, what it calls and what calls it.'),
     h('p', {className: 'hint'}, 'Double-click a box to open or close it. Focus shows one symbol with only its callers and callees.'),
     D.errors && D.errors.length ? h('p', {className: 'hint'}, `${D.errors.length} files failed to parse: ${D.errors.slice(0, 5).join(', ')}`) : null);
-  const n = byId.get(id), mine = inside(id), out = new Map(), inn = new Map();
+  const n = byId.get(id), mine = inside(id), out = new Map(), inn = new Map(), imp = new Map(), impBy = new Map();
   for (const [s, t, kind, c] of D.edges) {
-    if (mine.has(s) && !mine.has(t)) { const k = t + '|' + kind; out.set(k, (out.get(k) || 0) + c); }
-    if (mine.has(t) && !mine.has(s)) { const k = s + '|' + kind; inn.set(k, (inn.get(k) || 0) + c); }
+    const [o, i] = kind === 'imports' ? [imp, impBy] : [out, inn];
+    if (mine.has(s) && !mine.has(t)) { const k = t + '|' + kind; o.set(k, (o.get(k) || 0) + c); }
+    if (mine.has(t) && !mine.has(s)) { const k = s + '|' + kind; i.set(k, (i.get(k) || 0) + c); }
   }
   const where = n.file ? n.file + (n.line && n.kind !== 'module' ? ':' + n.line : '') : 'directory';
   const kidsN = (kids.get(id) || []).length;
@@ -439,7 +440,10 @@ function Info({id, st, act}) {
       editor ? h('a', {className: 'plain', href: editor}, 'Open in VS Code') : null),
     h(Code, {node: n}),
     h('h3', null, 'Calls out'), h(Links, {m: out, go: act.go, st}),
-    h('h3', null, 'Called by'), h(Links, {m: inn, go: act.go, st}));
+    h('h3', null, 'Called by'), h(Links, {m: inn, go: act.go, st}),
+    n.kind === 'function' || n.kind === 'method' || n.kind === 'class' ? null : [
+      h('h3', {key: 'i'}, 'Imports'), h(Links, {key: 'il', m: imp, go: act.go, st}),
+      h('h3', {key: 'b'}, 'Imported by'), h(Links, {key: 'bl', m: impBy, go: act.go, st})]);
 }
 
 // ---- app ------------------------------------------------------------------------------
