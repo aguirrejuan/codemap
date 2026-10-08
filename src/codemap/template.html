@@ -13,6 +13,7 @@
   --changed-bg: #fcebeb; --changed-bd: #a32d2d; --aff-bg: #faeeda; --aff2-bg: #fdf6ea; --aff-bd: #ba7517;
   --code-bg: #f3f2ed; --code-chg: #fbe3e3;
   --k-pkg: #7a6f52; --k-mod: #4f6b3a; --k-cls: #2f5f99; --k-fn: #6b4f99;
+  --k-ext: #85837b; --ext: rgba(120, 120, 120, .07); --cyc: #c42b2b;
   --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
     --changed-bg: #5a1d1d; --changed-bd: #f09595; --aff-bg: #4f3407; --aff2-bg: #3a2a0d; --aff-bd: #ef9f27;
     --code-bg: #1f1f1d; --code-chg: #4a1e1e;
     --k-pkg: #c9bb92; --k-mod: #a8c98f; --k-cls: #8db8ef; --k-fn: #c3a8ef;
+    --k-ext: #a09e96; --ext: rgba(255, 255, 255, .03); --cyc: #ff7b7b;
   }
 }
 :root[data-theme="dark"] {
@@ -32,6 +34,7 @@
   --changed-bg: #5a1d1d; --changed-bd: #f09595; --aff-bg: #4f3407; --aff2-bg: #3a2a0d; --aff-bd: #ef9f27;
   --code-bg: #1f1f1d; --code-chg: #4a1e1e;
   --k-pkg: #c9bb92; --k-mod: #a8c98f; --k-cls: #8db8ef; --k-fn: #c3a8ef;
+  --k-ext: #a09e96; --ext: rgba(255, 255, 255, .03); --cyc: #ff7b7b;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -42,6 +45,8 @@ header { padding: 12px 16px 8px; border-bottom: 1px solid var(--border); }
 h1 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
 .summary { color: var(--muted); font-size: 13px; margin: 0; }
 .summary.pr { color: var(--text); }
+.summary.cyc { color: var(--cyc); }
+.summary.cyc a { color: var(--cyc); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; margin-right: 10px; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); }
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: var(--panel); color: var(--muted); padding: 5px 10px; font: inherit; font-size: 13px; cursor: pointer; }
@@ -71,6 +76,7 @@ aside a:hover { text-decoration: underline; }
 .badge.h0 { background: var(--changed-bg); color: var(--changed-bd); }
 .badge.h1, .badge.h2 { background: var(--aff-bg); color: var(--aff-bd); }
 .badge.focus { background: var(--hl); color: var(--panel); }
+.badge.cyc { color: var(--cyc); box-shadow: inset 0 0 0 1px var(--cyc); }
 pre.code { background: var(--code-bg); border-radius: 8px; padding: 8px 0; margin: 6px 0 0; font: 11.5px/1.55 var(--mono); overflow-x: auto; max-height: 420px; }
 pre.code div { padding: 0 10px 0 0; white-space: pre; }
 pre.code div.chg { background: var(--code-chg); }
@@ -93,11 +99,13 @@ pre.code .ln { display: inline-block; width: 44px; padding-right: 10px; text-ali
 .name { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cmeta { font-size: 11px; color: var(--muted); white-space: nowrap; display: flex; align-items: center; }
 .kind { font: 600 9.5px/14px var(--mono); padding: 0 4px; border-radius: 4px; border: 1px solid currentColor; flex: none; text-transform: uppercase; letter-spacing: .02em; }
-.k-package { color: var(--k-pkg); } .k-module { color: var(--k-mod); } .k-class { color: var(--k-cls); } .k-function, .k-method { color: var(--k-fn); }
+.k-package { color: var(--k-pkg); } .k-module { color: var(--k-mod); } .k-class { color: var(--k-cls); } .k-function, .k-method { color: var(--k-fn); } .k-external { color: var(--k-ext); }
 .box { width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 10px; transition: opacity .15s; }
 .box.package { background: var(--pkg); border-style: dashed; }
 .box.module { background: var(--mod); }
 .box.class { background: var(--cls); }
+.box.external { background: var(--ext); border-style: dotted; }
+.card.ext { background: var(--ext); border-style: dashed; }
 .box-head { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 10px 10px 0 0; }
 .box-head .cmeta { margin-left: 2px; }
 .card.h0 { background: var(--changed-bg); border-color: var(--changed-bd); border-width: 1.5px; }
@@ -115,12 +123,13 @@ pre.code .ln { display: inline-block; width: 44px; padding-right: 10px; text-ali
 .react-flow__edge.references .react-flow__edge-path { stroke-dasharray: 2 3; }
 .react-flow__edge.imports .react-flow__edge-path { stroke-dasharray: 6 4; stroke-width: 1; }
 .react-flow__edge.hot .react-flow__edge-path { stroke: var(--aff-bd); stroke-width: 1.8; }
+.react-flow__edge.cyc .react-flow__edge-path { stroke: var(--cyc); stroke-width: 1.8; }
 .react-flow__edge.hl .react-flow__edge-path { stroke: var(--hl); stroke-width: 2.2; }
 .react-flow__edge.faded { opacity: .12; }
 .react-flow__edge.dimmed { opacity: .35; }
 .react-flow__edge-textbg { fill: var(--panel); }
 .react-flow__edge-text { fill: var(--text); font-size: 10px; }
-#cm-defs .base { fill: var(--edge); } #cm-defs .hot { fill: var(--aff-bd); } #cm-defs .hl { fill: var(--hl); }
+#cm-defs .base { fill: var(--edge); } #cm-defs .hot { fill: var(--aff-bd); } #cm-defs .hl { fill: var(--hl); } #cm-defs .cyc { fill: var(--cyc); }
 .react-flow__minimap { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; }
 .react-flow__minimap-mask { fill: var(--bg); fill-opacity: .6; }
 .react-flow__minimap-node { fill: var(--muted); stroke: none; }
@@ -149,6 +158,7 @@ pre.code .ln { display: inline-block; width: 44px; padding-right: 10px; text-ali
     <marker id="cm-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="base" d="M0,0 L10,5 L0,10 z"/></marker>
     <marker id="cm-a-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hot" d="M0,0 L10,5 L0,10 z"/></marker>
     <marker id="cm-a-hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hl" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="cm-a-cyc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="cyc" d="M0,0 L10,5 L0,10 z"/></marker>
   </defs>
 </svg>
 <div id="app"></div>
@@ -173,9 +183,24 @@ const {ReactFlowProvider, Handle, Position, BaseEdge, MiniMap, Controls, Backgro
 
 // ---- the tree ---------------------------------------------------------------
 
-const RANK = {package: 0, module: 1, class: 2, function: 3, method: 3};
+const RANK = {package: 0, module: 1, class: 2, function: 3, method: 3, external: 0};
 const LEVEL = {package: 0, module: 1, class: 2, function: 3};
-const TAG = {package: 'pkg', module: 'mod', class: 'cls', function: 'fn', method: 'fn'};
+const TAG = {package: 'pkg', module: 'mod', class: 'cls', function: 'fn', method: 'fn', external: 'ext'};
+
+// External packages sit in one box at the edge, split into third-party and stdlib.
+const EXT = '@external';
+const extNodes = D.nodes.filter(n => n.kind === 'external');
+if (extNodes.length) {
+  const groups = [{id: EXT, kind: 'external', parent: null, label: 'external', group: true}];
+  for (const [id, label, std] of [[EXT + '.third', 'third-party', false], [EXT + '.stdlib', 'stdlib', true]]) {
+    const mine = extNodes.filter(n => !!n.stdlib === std);
+    if (mine.length) groups.push({id, kind: 'external', parent: EXT, label, group: true});
+    for (const n of mine) n.parent = id;
+  }
+  D.nodes.push(...groups);
+}
+// Third-party packages show from the top level; stdlib folds into one card until Modules.
+const rankOf = id => id === EXT || id === EXT + '.third' ? -1 : RANK[byId.get(id).kind];
 const LIMIT = 700;  // boxes beyond which ELK takes seconds; we ask first
 const byId = new Map(D.nodes.map(n => [n.id, n]));
 const kids = new Map();
@@ -207,6 +232,16 @@ function symbols(id) {
 const TEST = /^(tests?|testing|conftest)$|^test_|_tests?$/;
 const isTest = id => id.split('.').some(p => TEST.test(p));
 const hasTests = D.nodes.some(n => n.kind === 'module' && isTest(n.id));
+const isExt = id => byId.get(id).kind === 'external';
+const importers = new Map();
+for (const [s, t, kind] of D.edges) if (kind === 'imports' && isExt(t)) importers.set(t, (importers.get(t) || 0) + 1);
+
+// Import cycles: the modules in each, and the module-to-module edges that close them.
+const cycles = D.cycles || [], cycleOf = new Map(), cycEdge = new Set();
+cycles.forEach((c, i) => {
+  for (const m of c.modules) cycleOf.set(m, i);
+  for (const [a, b] of c.edges) cycEdge.add(a + '\u0000' + b);
+});
 
 // Neighbours for focus mode, both directions.
 const adj = new Map();
@@ -216,13 +251,13 @@ for (const [s, t, kind] of D.edges) {
 
 function focusSet(st) {
   const start = [...inside(st.focus)];
-  const keep = id => !st.hideTests || !isTest(id) || isTest(st.focus);
+  const keep = id => (!st.hideTests || !isTest(id) || isTest(st.focus)) && (st.ext || !isExt(id) || isExt(st.focus));
   const seen = new Set(start);
   let frontier = start;
   for (let d = 0; d < st.depth; d++) {
     const next = [];
     for (const id of frontier) for (const [o, kind] of adj.get(id) || []) {
-      if (kind === 'imports' && !st.imports) continue;
+      if (kind === 'imports' && !st.imports && !isExt(id) && !isExt(o)) continue;
       if (!seen.has(o) && keep(o)) { seen.add(o); next.push(o); }
     }
     frontier = next;
@@ -233,14 +268,15 @@ function focusSet(st) {
 // What is on screen: visible ids, which of them are open boxes, and folded edges.
 function computeView(st) {
   let include, open;
-  if (st.focus) {
-    const I = focusSet(st), anc = new Set();
+  const imports = st.imports || st.cycle !== null;
+  if (st.focus || st.cycle !== null) {
+    const I = st.focus ? focusSet(st) : new Set(cycles[st.cycle].modules), anc = new Set();
     for (const id of I) for (const a of chain(id).slice(1)) anc.add(a);
     include = id => I.has(id) || anc.has(id);
     open = id => anc.has(id);
   } else {
-    include = id => !(st.hideTests && isTest(id)) && !(st.pr && st.blastOnly && hopOf(id) === undefined);
-    open = id => st.expanded.has(id) || (!st.collapsed.has(id) && RANK[byId.get(id).kind] < LEVEL[st.level]);
+    include = id => !(st.hideTests && isTest(id)) && !(st.pr && st.blastOnly && hopOf(id) === undefined) && (st.ext || !isExt(id));
+    open = id => st.expanded.has(id) || (!st.collapsed.has(id) && rankOf(id) < LEVEL[st.level]);
   }
   const vis = [], visSet = new Set();
   const walk = id => {
@@ -258,16 +294,17 @@ function computeView(st) {
     }
     return visSet.has(c[0]) ? c[0] : null;
   };
-  const agg = new Map();
+  const agg = new Map(), cyc = new Set();
   for (const [s, t, kind, c] of D.edges) {
-    if (kind === 'imports' && !st.imports) continue;
+    if (kind === 'imports' && !imports && !isExt(t)) continue;
     const a = rep(s), b = rep(t);
     if (!a || !b || a === b) continue;
     if (chain(a).includes(b) || chain(b).includes(a)) continue;  // a box and its own contents
     const key = a + '\u0000' + b + '\u0000' + kind;
     agg.set(key, (agg.get(key) || 0) + c);
+    if (kind === 'imports' && cycEdge.has(s + '\u0000' + t)) cyc.add(key);
   }
-  const edges = [...agg].map(([key, count]) => { const [a, b, kind] = key.split('\u0000'); return {id: key, a, b, kind, count}; });
+  const edges = [...agg].map(([key, count]) => { const [a, b, kind] = key.split('\u0000'); return {id: key, a, b, kind, count, cyc: cyc.has(key)}; });
   return {vis, box, edges, rep};
 }
 
@@ -279,6 +316,10 @@ function textW(s, font) { ctx.font = font; return ctx.measureText(s).width; }
 
 function metaText(id) {
   const n = byId.get(id), c = symbols(id);
+  if (n.kind === 'external') {
+    const k = n.group ? [...inside(id)].filter(x => !byId.get(x).group).length : importers.get(id) || 0;
+    return n.group ? `${k} package${k === 1 ? '' : 's'}` : `${k} importer${k === 1 ? '' : 's'}`;
+  }
   if (n.kind === 'function' || n.kind === 'method') return n.loc ? `${n.loc} lines` : '';
   if (n.kind === 'class') return `${c - 1} method${c === 2 ? '' : 's'}`;
   return `${c} symbol${c === 1 ? '' : 's'}`;
@@ -298,7 +339,7 @@ async function layout(view) {
   const nodes = new Map(), root = {id: '__root', layoutOptions: ROOT_OPTS, children: [], edges: []};
   for (const id of view.vis) {
     const n = byId.get(id), lw = textW(label(id), `600 12px ${FONT}`), mw = textW(metaText(id), `11px ${FONT}`);
-    const e = {id, children: []}, badge = D.diff && hopOf(id) !== undefined ? 62 : 0;
+    const e = {id, children: []}, badge = (D.diff && hopOf(id) !== undefined ? 62 : 0) + (cycleOf.has(id) ? 46 : 0);
     if (view.box.has(id)) {  // tag, name, meta and badge share the header
       e.layoutOptions = {'elk.padding': '[top=42,left=14,bottom=14,right=14]',
         'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': `(${Math.ceil(lw + mw + badge + 72)},60)`};
@@ -308,6 +349,13 @@ async function layout(view) {
     }
     nodes.set(id, e);
     (n.parent && nodes.has(n.parent) ? nodes.get(n.parent) : root).children.push(e);
+  }
+  for (const [id, e] of nodes) {  // hidden edges stack external packages into columns, not one tall one
+    const n = byId.get(id), k = e.children.length;
+    if (!(n.group && n.parent) || !view.box.has(id) || k < 8) continue;
+    const rows = Math.ceil(k / Math.max(1, Math.round(Math.sqrt(k / 3))));
+    e.edges = [];
+    for (let i = 0; i + rows < k; i++) e.edges.push({id: '__grid' + id + i, sources: [e.children[i].id], targets: [e.children[i + rows].id]});
   }
   for (const ed of view.edges) {  // ELK wants each edge in the deepest box holding both ends
     const up = new Set(chain(ed.a).slice(1));
@@ -347,7 +395,8 @@ function Handles() {
   return [h(Handle, {key: 't', type: 'target', position: Position.Left, isConnectable: false}),
           h(Handle, {key: 's', type: 'source', position: Position.Right, isConnectable: false})];
 }
-function Badge({hop, focus}) {
+function Badge({hop, focus, cyc}) {
+  if (cyc) return [h(Badge, {key: 'b', hop, focus}), h('span', {key: 'c', className: 'badge cyc'}, 'cycle')];
   if (focus) return h('span', {className: 'badge focus'}, 'focus');
   if (hop === undefined) return null;
   return h('span', {className: 'badge h' + Math.min(hop, 2)}, hop === 0 ? 'changed' : 'hop ' + hop);
@@ -356,7 +405,7 @@ function Card({data}) {
   return h('div', {className: 'card ' + data.cls, title: data.id},
     ...Handles(),
     h('div', {className: 'top'}, h('span', {className: 'kind k-' + data.kind}, TAG[data.kind]), h('span', {className: 'name'}, data.label)),
-    h('div', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus})));
+    h('div', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus, cyc: data.cyc})));
 }
 function Box({data}) {
   return h('div', {className: 'box ' + data.kind + ' ' + data.cls, title: data.id},
@@ -364,7 +413,7 @@ function Box({data}) {
     h('div', {className: 'box-head'},
       h('span', {className: 'kind k-' + data.kind}, TAG[data.kind]),
       h('span', {className: 'name'}, data.label),
-      h('span', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus}))));
+      h('span', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus, cyc: data.cyc}))));
 }
 function FlowEdge({id, data, markerEnd}) {
   const p = data.points;
@@ -414,10 +463,18 @@ function Links({m, go, st}) {
       st.pr ? h(Badge, {hop: hops[other]}) : null);
   }), rows.length > 40 ? h('li', {className: 'hint'}, `and ${rows.length - 40} more`) : null);
 }
+function CycleList({act}) {
+  return h('ul', null, cycles.map((c, i) => h('li', {key: i},
+    h('a', {onClick: () => act.cycle(i)}, `${c.modules.length} modules`), ': ',
+    h('span', {className: 'hint'}, c.modules.slice(0, 4).join(', ') + (c.modules.length > 4 ? ', …' : '')))));
+}
 function Info({id, st, act}) {
   if (!id) return h('div', null,
     h('p', {className: 'hint'}, 'Click a box to see its code, what it calls and what calls it.'),
     h('p', {className: 'hint'}, 'Double-click a box to open or close it. Focus shows one symbol with only its callers and callees.'),
+    cycles.length ? [h('h3', {key: 'h'}, 'Import cycles'),
+      h('p', {key: 'p', className: 'hint'}, 'Each group imports itself back at load time, through one module or a chain.'),
+      h(CycleList, {key: 'l', act})] : null,
     D.errors && D.errors.length ? h('p', {className: 'hint'}, `${D.errors.length} files failed to parse: ${D.errors.slice(0, 5).join(', ')}`) : null);
   const n = byId.get(id), mine = inside(id), out = new Map(), inn = new Map(), imp = new Map(), impBy = new Map();
   for (const [s, t, kind, c] of D.edges) {
@@ -425,7 +482,9 @@ function Info({id, st, act}) {
     if (mine.has(s) && !mine.has(t)) { const k = t + '|' + kind; o.set(k, (o.get(k) || 0) + c); }
     if (mine.has(t) && !mine.has(s)) { const k = s + '|' + kind; i.set(k, (i.get(k) || 0) + c); }
   }
-  const where = n.file ? n.file + (n.line && n.kind !== 'module' ? ':' + n.line : '') : 'directory';
+  const where = n.file ? n.file + (n.line && n.kind !== 'module' ? ':' + n.line : '')
+    : n.kind !== 'external' ? 'directory' : n.group ? 'outside the repo' : n.stdlib ? 'standard library' : 'third-party';
+  const ext = n.kind === 'external', cyc = cycleOf.get(id);
   const kidsN = (kids.get(id) || []).length;
   const editor = n.file && D.root ? `vscode://file/${D.root}/${n.file}:${n.line || 1}` : null;
   return h('div', null,
@@ -438,11 +497,14 @@ function Info({id, st, act}) {
                       : h('button', {className: 'plain', onClick: () => act.focus(id)}, 'Focus'),
       kidsN && !st.focus ? h('button', {className: 'plain', onClick: () => act.toggle(id)}, `Open or close (${kidsN} inside)`) : null,
       editor ? h('a', {className: 'plain', href: editor}, 'Open in VS Code') : null),
+    cyc !== undefined ? [h('h3', {key: 'ch'}, 'Import cycle'),
+      h('p', {key: 'cp', className: 'hint'}, `This module and ${cycles[cyc].modules.length - 1} others import each other at load time.`),
+      h('div', {key: 'ca', className: 'actions'}, h('button', {className: 'plain', onClick: () => act.cycle(cyc)}, 'Show the cycle'))] : null,
     h(Code, {node: n}),
-    h('h3', null, 'Calls out'), h(Links, {m: out, go: act.go, st}),
-    h('h3', null, 'Called by'), h(Links, {m: inn, go: act.go, st}),
+    ext ? null : [h('h3', {key: 'o'}, 'Calls out'), h(Links, {key: 'ol', m: out, go: act.go, st}),
+                  h('h3', {key: 'n'}, 'Called by'), h(Links, {key: 'nl', m: inn, go: act.go, st})],
     n.kind === 'function' || n.kind === 'method' || n.kind === 'class' ? null : [
-      h('h3', {key: 'i'}, 'Imports'), h(Links, {key: 'il', m: imp, go: act.go, st}),
+      ext ? null : h('h3', {key: 'i'}, 'Imports'), ext ? null : h(Links, {key: 'il', m: imp, go: act.go, st}),
       h('h3', {key: 'b'}, 'Imported by'), h(Links, {key: 'bl', m: impBy, go: act.go, st})]);
 }
 
@@ -454,8 +516,8 @@ function App() {
   const [st, setSt] = useState({
     level: nMods > 40 ? 'package' : nMods > 12 ? 'module' : 'function',
     expanded: new Set(), collapsed: new Set(),
-    pr: !!D.diff, blastOnly: false, imports: false, hideTests: hasTests,
-    focus: null, depth: 1, force: false,
+    pr: !!D.diff, blastOnly: false, imports: false, hideTests: hasTests, ext: false,
+    focus: null, cycle: null, depth: 1, force: false,
   });
   const [sel, setSel] = useState(null);
   const [hover, setHover] = useState(null);
@@ -496,7 +558,7 @@ function App() {
 
   const act = {
     toggle(id) {
-      if (!(kids.get(id) || []).length || st.focus) return;
+      if (!(kids.get(id) || []).length || st.focus || st.cycle !== null) return;
       const e = new Set(st.expanded), c = new Set(st.collapsed);
       if (view.box.has(id)) { e.delete(id); c.add(id); } else { c.delete(id); e.add(id); }
       after.current = {center: id};
@@ -505,15 +567,20 @@ function App() {
     },
     focus(id) {
       after.current = {fit: true};
-      set({focus: id});
+      set({focus: id, cycle: null});
       if (id) setSel(id);
+    },
+    cycle(i) {
+      after.current = {fit: true};
+      set({cycle: i, focus: null});
     },
     go(id) {  // follow a link from the side panel or the search box
       setSel(id);
       if (st.focus) { after.current = {fit: true}; set({focus: id}); return; }
       const e = new Set(st.expanded), c = new Set(st.collapsed);
       for (const a of chain(id).slice(1)) { c.delete(a); e.add(a); }
-      const patch = {expanded: e, collapsed: c};
+      const patch = {expanded: e, collapsed: c, cycle: null};
+      if (isExt(id)) patch.ext = true;
       if (st.hideTests && isTest(id)) patch.hideTests = false;
       if (st.pr && st.blastOnly && hopOf(id) === undefined) patch.blastOnly = false;
       after.current = {center: id};
@@ -522,7 +589,7 @@ function App() {
   };
 
   useEffect(() => {
-    const onKey = e => { if (e.key === 'Escape') { if (st.focus) act.focus(null); else setSel(null); } };
+    const onKey = e => { if (e.key === 'Escape') { if (st.focus || st.cycle !== null) act.focus(null); else setSel(null); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
@@ -542,12 +609,12 @@ function App() {
     return lay.nodes.map(n => {
       const node = byId.get(n.id), isBox = lay.view.box.has(n.id);
       const hop = st.pr ? hopOf(n.id) : undefined;
-      const cls = [hop !== undefined ? 'h' + Math.min(hop, 2) : (st.pr && !st.focus ? 'dim' : ''),
+      const cls = [hop !== undefined ? 'h' + Math.min(hop, 2) : (st.pr && !st.focus ? 'dim' : ''), node.kind === 'external' && !isBox ? 'ext' : '',
                    n.id === selRep ? 'sel' : '', n.id === st.focus ? 'focused' : '',
                    near && !isBox && !near.has(n.id) ? 'faded' : ''].join(' ');
       return {id: n.id, type: isBox ? 'box' : 'card', position: {x: n.x, y: n.y}, parentNode: n.parent,
               style: {width: n.w, height: n.h}, draggable: false, selectable: false, connectable: false,
-              data: {id: n.id, kind: node.kind, label: label(n.id), meta: metaText(n.id), hop, cls, focus: n.id === st.focus}};
+              data: {id: n.id, kind: node.kind, label: label(n.id), meta: metaText(n.id), hop, cls, focus: n.id === st.focus, cyc: cycleOf.has(n.id)}};
     });
   }, [lay, st.pr, st.focus, sel, near]);
 
@@ -556,9 +623,9 @@ function App() {
     return lay.view.edges.map(e => {
       const hot = st.pr && hopOf(e.a) !== undefined && hopOf(e.b) !== undefined;
       const on = hl && (e.a === hl || e.b === hl);
-      const cls = [e.kind, on ? 'hl' : hot ? 'hot' : '', hl && !on ? 'faded' : (st.pr && !hot && !st.focus ? 'dimmed' : '')].join(' ');
+      const cls = [e.kind, on ? 'hl' : e.cyc ? 'cyc' : hot ? 'hot' : '', hl && !on ? 'faded' : (st.pr && !hot && !e.cyc && !st.focus ? 'dimmed' : '')].join(' ');
       return {id: e.id, source: e.a, target: e.b, type: 'flow', className: cls, zIndex: 1000,
-              markerEnd: on ? 'cm-a-hl' : hot ? 'cm-a-hot' : 'cm-a',
+              markerEnd: on ? 'cm-a-hl' : e.cyc ? 'cm-a-cyc' : hot ? 'cm-a-hot' : 'cm-a',
               data: {points: lay.pts.get(e.id), count: e.count, kind: e.kind}};
     });
   }, [lay, st.pr, st.focus, hl]);
@@ -577,21 +644,29 @@ function App() {
     h('header', null,
       h('h1', null, 'codemap · ' + D.repo),
       h('p', {className: 'summary'}, D.summary),
-      D.diff ? h('p', {className: 'summary pr'}, `Since ${D.diff.base}: ${D.diff.summary}`) : null),
+      D.diff ? h('p', {className: 'summary pr'}, `Since ${D.diff.base}: ${D.diff.summary}`) : null,
+      cycles.length ? h('p', {className: 'summary cyc'}, 'Import cycles: ', cycles.slice(0, 8).map((c, i) =>
+        h('a', {key: i, onClick: () => act.cycle(i), title: c.modules.join('\n')},
+          c.modules.slice(0, 2).map(m => byId.get(m).label).join(' ⇄ ') + (c.modules.length > 2 ? ` +${c.modules.length - 2}` : ''))),
+        cycles.length > 8 ? `and ${cycles.length - 8} more` : null) : null),
     h('div', {className: 'controls'},
       h('div', {className: 'seg', role: 'group', 'aria-label': 'Zoom level'},
-        levels.map(l => h('button', {key: l, className: !st.focus && st.level === l ? 'on' : '',
-          onClick: () => { after.current = {fit: true}; set({level: l, expanded: new Set(), collapsed: new Set(), focus: null, force: false}); }}, names[l]))),
+        levels.map(l => h('button', {key: l, className: !st.focus && st.cycle === null && st.level === l ? 'on' : '',
+          onClick: () => { after.current = {fit: true}; set({level: l, expanded: new Set(), collapsed: new Set(), focus: null, cycle: null, force: false}); }}, names[l]))),
       st.focus ? h('span', {className: 'focuschip'}, 'Focus: ', h('b', null, byId.get(st.focus).label), ' · hops',
         h('div', {className: 'seg'}, [1, 2, 3].map(d => h('button', {key: d, className: st.depth === d ? 'on' : '',
           onClick: () => { after.current = {fit: true}; set({depth: d}); }}, d))),
         h('button', {className: 'plain', onClick: () => act.focus(null), title: 'Exit focus (Esc)'}, '×')) : null,
+      st.cycle !== null ? h('span', {className: 'focuschip'}, 'Import cycle: ', h('b', null, `${cycles[st.cycle].modules.length} modules`),
+        h('button', {className: 'plain', onClick: () => act.focus(null), title: 'Leave the cycle (Esc)'}, '×')) : null,
       D.diff ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.pr, onChange: e => set({pr: e.target.checked})}), 'PR mode') : null,
       D.diff && !st.focus ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.blastOnly,
         onChange: e => { after.current = {fit: true}; set({blastOnly: e.target.checked}); }}), 'Blast radius only') : null,
       hasTests ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.hideTests,
         onChange: e => { after.current = {fit: true}; set({hideTests: e.target.checked}); }}), 'Hide tests') : null,
       h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.imports, onChange: e => set({imports: e.target.checked})}), 'Show imports'),
+      extNodes.length ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.ext,
+        onChange: e => { after.current = {fit: true}; set({ext: e.target.checked}); }}), 'External packages') : null,
       h('input', {type: 'search', list: 'ids', value: query, placeholder: 'Find a symbol, e.g. get_features',
         onChange: e => search(e.target.value), onKeyDown: e => { if (e.key === 'Enter') search(e.target.value); }}),
       h('button', {className: 'plain', onClick: () => fit(lay, 200)}, 'Fit')),
@@ -619,6 +694,7 @@ function App() {
       D.diff ? [h('span', {key: 'c'}, h('span', {className: 'sw', style: {background: 'var(--changed-bg)', borderColor: 'var(--changed-bd)'}}), 'changed'),
                 h('span', {key: '1'}, h('span', {className: 'sw', style: {background: 'var(--aff-bg)', borderColor: 'var(--aff-bd)'}}), 'caller, 1 hop'),
                 h('span', {key: '2'}, h('span', {className: 'sw', style: {background: 'var(--aff2-bg)', borderColor: 'var(--aff-bd)'}}), 'caller, 2+ hops')] : null,
+      cycles.length ? h('span', null, h('span', {className: 'sw', style: {background: 'var(--cyc)', borderColor: 'var(--cyc)'}}), 'import cycle') : null,
       h('span', null, 'solid = calls · dotted = passed as a value · dashed = imports · number = call sites folded together')));
 }
 

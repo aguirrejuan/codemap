@@ -126,3 +126,36 @@ def test_source_cannot_close_the_script_tag(tmp_path):
     render.html({'sources': {'a.py': 's = "</script><!--"'}}, str(out))
     script = out.read_text().split('const D = ', 1)[1]
     assert '</script><!--' not in script.split(';\n', 1)[0]
+
+
+def test_unresolved_imports_become_external_packages(ix):
+    ext = {n['label']: n for n in ix.nodes.values() if n['kind'] == 'external'}
+    assert 'airflow' in ext and not ext['airflow']['stdlib']
+    assert edge(ix, 'dags.daily_features', 'ext:airflow', 'imports')
+    # relative imports and the repo's own packages never count as external
+    assert 'features' not in ext and 'compute' not in ext
+
+
+def write(root, files):
+    for rel, text in files.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text)
+
+
+def test_cycles_follow_imports_that_run_at_load_time(tmp_path):
+    write(tmp_path, {
+        'app/__init__.py': '',
+        'app/a.py': 'from app import b\n',
+        'app/b.py': 'from . import c\nimport json\n',
+        'app/c.py': 'import app.a\n',
+        # each of these closes a loop only lazily, so neither is a cycle
+        'app/d.py': 'from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from app import e\n',
+        'app/e.py': 'def f():\n    from app import d\n',
+    })
+    ix = parse.build(tmp_path)
+    assert ix.cycles == [{'modules': ['app.a', 'app.b', 'app.c'],
+                          'edges': [['app.a', 'app.b'], ['app.b', 'app.c'], ['app.c', 'app.a']]}]
+    assert edge(ix, 'app.e', 'app.d', 'imports')  # still drawn, just not a cycle
+    assert ix.nodes['ext:json']['stdlib']
+    base, _ = cli.summarise(ix, None)
+    assert '1 import cycle, the largest through 3 modules' in base

@@ -7,11 +7,13 @@ passed as a value, such as Airflow's `python_callable=`) and `imports`.
 import ast
 import os
 import subprocess
+import sys
 from collections import defaultdict
 
 SKIP_DIRS = {'.git', '.venv', 'venv', 'env', 'node_modules', 'build', 'dist',
              '__pycache__', '.tox', '.mypy_cache', '.pytest_cache', 'site-packages'}
 SYMBOL_KINDS = ('class', 'function', 'method')
+STDLIB = set(getattr(sys, 'stdlib_module_names', ())) | set(sys.builtin_module_names)
 
 
 def list_files(repo):
@@ -54,6 +56,8 @@ class Index:
         self.bases = {}                 # class id -> [ast expr]
         self.attr_types = defaultdict(dict)  # class id -> {attr: class id}
         self.edges = defaultdict(int)   # (src, dst, kind) -> count
+        self.eager = set()              # (module, module) imports that run at load time
+        self.cycles = []
         self.unresolved = defaultdict(int)
         self.calls_total = 0
         self.errors = []
@@ -126,8 +130,15 @@ class Index:
         return '.'.join(parts + ([node.module] if node.module else []))
 
     def _collect_imports(self, mid, tree):
+        """Fill the module's name table and its import targets.
+
+        Each target is (dotted name, relative?, eager?). An eager import runs when
+        the module loads: not inside a function and not under `if TYPE_CHECKING`.
+        Only eager imports can form a cycle that breaks at import time.
+        """
         table = self.mods[mid]['imports']
-        for node in ast.walk(tree):
+        targets = self.mods[mid].setdefault('import_targets', [])
+        for node, eager in _walk_imports(tree):
             if isinstance(node, ast.Import):
                 for a in node.names:
                     if a.asname:
@@ -135,15 +146,16 @@ class Index:
                     else:
                         head = a.name.split('.')[0]
                         table[head] = head
-                    self.mods[mid].setdefault('import_targets', []).append(a.name)
-            elif isinstance(node, ast.ImportFrom):
+                    targets.append((a.name, False, eager))
+            else:
                 base = self._from_base(mid, node)
                 for a in node.names:
                     if a.name == '*':
+                        targets.append((base, bool(node.level), eager))
                         continue
-                    table[a.asname or a.name] = f'{base}.{a.name}' if base else a.name
-                    self.mods[mid].setdefault('import_targets', []).append(
-                        f'{base}.{a.name}' if base else a.name)
+                    qual = f'{base}.{a.name}' if base else a.name
+                    table[a.asname or a.name] = qual
+                    targets.append((qual, bool(node.level), eager))
 
     # ---- resolution -------------------------------------------------------
 
@@ -264,13 +276,30 @@ class Index:
         for mid, info in self.mods.items():
             for cls_ast in (n for n in ast.walk(info['tree']) if isinstance(n, ast.ClassDef)):
                 self._attr_types(cls_ast, mid)
+        # A repo that puts its own folders on sys.path imports `ml` for `dagfolder/ml`.
+        # Modules count only at the root, so `utils/json.py` does not hide stdlib `json`.
+        local = {n['label'] for n in self.nodes.values() if n['kind'] == 'package'}
+        local |= {n['id'] for n in self.nodes.values() if n['kind'] == 'module' and not n['parent']}
         for mid, info in self.mods.items():
             _Linker(self, mid).visit(info['tree'])
-            for target in info.get('import_targets', []):
-                hit = self.resolve_qual(target)
+            for target, relative, eager in info.get('import_targets', []):
+                hit = self.resolve_qual(target) if target else None
                 dst = self.module_of(hit) if hit else None
-                if dst and dst != mid and self.nodes[dst]['kind'] == 'module':
-                    self.edges[(mid, dst, 'imports')] += 1
+                if dst:
+                    if dst != mid and self.nodes[dst]['kind'] == 'module':
+                        self.edges[(mid, dst, 'imports')] += 1
+                        if eager:
+                            self.eager.add((mid, dst))
+                    continue
+                top = target.split('.')[0]
+                if relative or not top or top == '__future__' or top in local:
+                    continue
+                ext = 'ext:' + top
+                if ext not in self.nodes:
+                    self._add(ext, 'external', None, top)
+                    self.nodes[ext]['stdlib'] = top in STDLIB
+                self.edges[(mid, ext, 'imports')] += 1
+        self.cycles = _cycles(self.eager)
         return self
 
     def _attr_types(self, cls_ast, mid):
@@ -313,7 +342,78 @@ class Index:
             'unresolved': dict(self.unresolved),
             'calls_total': self.calls_total,
             'errors': self.errors,
+            'cycles': self.cycles,
         }
+
+
+def _type_checking(test):
+    return (isinstance(test, ast.Name) and test.id == 'TYPE_CHECKING') or \
+        (isinstance(test, ast.Attribute) and test.attr == 'TYPE_CHECKING')
+
+
+def _walk_imports(node, eager=True):
+    """Yield (import node, eager?) for every import under `node`."""
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, (ast.Import, ast.ImportFrom)):
+            yield child, eager
+        elif isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            yield from _walk_imports(child, False)
+        elif isinstance(child, ast.If) and _type_checking(child.test):
+            for sub in child.body:
+                yield from _walk_imports(ast.Module(body=[sub], type_ignores=[]), False)
+            for sub in child.orelse:
+                yield from _walk_imports(ast.Module(body=[sub], type_ignores=[]), eager)
+        else:
+            yield from _walk_imports(child, eager)
+
+
+def _cycles(pairs):
+    """Import cycles: strongly connected groups of modules, with the edges inside each.
+
+    Tarjan's algorithm, iterative so a deep import chain cannot hit the recursion limit.
+    """
+    graph = defaultdict(list)
+    for a, b in sorted(pairs):
+        graph[a].append(b)
+    index, low, stack, on, groups = {}, {}, [], set(), []
+    for root in sorted(graph):
+        if root in index:
+            continue
+        work = [(root, 0)]
+        while work:
+            v, i = work.pop()
+            if i == 0:
+                index[v] = low[v] = len(index)
+                stack.append(v)
+                on.add(v)
+            nbrs = graph.get(v, [])
+            if i < len(nbrs):
+                work.append((v, i + 1))
+                w = nbrs[i]
+                if w not in index:
+                    work.append((w, 0))
+                elif w in on:
+                    low[v] = min(low[v], index[w])
+                continue
+            if low[v] == index[v]:
+                group = []
+                while True:
+                    w = stack.pop()
+                    on.discard(w)
+                    group.append(w)
+                    if w == v:
+                        break
+                if len(group) > 1:
+                    groups.append(sorted(group))
+            if work:
+                parent = work[-1][0]
+                low[parent] = min(low[parent], low[v])
+    out = []
+    for group in sorted(groups):
+        members = set(group)
+        out.append({'modules': group,
+                    'edges': sorted([a, b] for a, b in pairs if a in members and b in members)})
+    return out
 
 
 def _dotted(expr):

@@ -21,15 +21,21 @@ def summarise(index, hops):
     syms = sum(1 for x in n if x['kind'] in ('class', 'function', 'method'))
     resolved = index.calls_total - sum(index.unresolved.values())
     pct = round(100 * resolved / index.calls_total) if index.calls_total else 0
-    base = (f'{mods} modules, {syms} symbols, {len(index.edges)} edges. '
+    ext = sum(1 for x in n if x['kind'] == 'external')
+    s = lambda n, word: f'{n} {word}' + ('' if n == 1 else 's')
+    base = (f'{mods} modules, {syms} symbols, {len(index.edges)} edges, '
+            f'{s(ext, "external package")}. '
             f'{pct}% of {index.calls_total} calls resolve to project code; the rest are '
             f'stdlib, third-party or dynamic.')
+    if index.cycles:
+        biggest = max(len(c['modules']) for c in index.cycles)
+        base += (f' {s(len(index.cycles), "import cycle")}, the largest '
+                 f'through {s(biggest, "module")}.')
     if hops is None:
         return base, None
     changed = [k for k, h in hops.items() if h == 0]
     reached = len(hops) - len(changed)
     tops = {k.split('.')[0] for k in hops}
-    s = lambda n, word: f'{n} {word}' + ('' if n == 1 else 's')
     pr = (f'{s(len(changed), "changed symbol")} reach{"es" if len(changed) == 1 else ""} '
           f'{s(reached, "other")} across {s(len(tops), "top-level package")}.')
     return base, pr

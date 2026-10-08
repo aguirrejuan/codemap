@@ -50,6 +50,17 @@ tests**. Hovering a box lights its edges and fades the rest.
 Edge kinds: **calls**; **references**, for a function passed as a value, such
 as Airflow's `python_callable=`; and **imports**, hidden until you ask.
 
+Tick **External packages** to draw the imports that leave the repo as grey
+boxes at the map's edge, third-party apart from the standard library. Click
+one to list every module that imports it.
+
+An **import cycle** is a group of modules that import each other, directly or
+through a chain. codemap counts only imports that run at load time, so an
+import inside a function or under `if TYPE_CHECKING:` breaks no cycle and
+makes none. Modules in a cycle carry a red badge, the imports that close it
+draw red, and the summary line counts the cycles. Click a cycle in the header
+to show only its modules.
+
 ## Post the blast radius on every PR
 
 `--mermaid` prints the changed and affected modules nested in their
