@@ -9,6 +9,12 @@ Tools like graphify draw every function, file and docstring as a peer node.
 codemap parses with `ast`, so it knows what each thing is and where it lives,
 and it keeps that nesting in the picture.
 
+![A change to velocity marked in red; its callers one and two hops away in orange](docs/blast-radius.png)
+
+*One edit to `velocity` and the five functions it reaches, nested in their
+packages. Made from the test fixture:
+`codemap tests/fixtures/fraudsvc --diff main` after changing one line.*
+
 ## Install
 
 ```bash
@@ -34,6 +40,8 @@ codemap ~/code/myrepo --pr 397 --open
 ```bash
 codemap https://github.com/OWNER/REPO/pull/397 --open
 ```
+
+![The test fixture mapped at function level, with the most-called and most-calling lists in the side panel](docs/map.png)
 
 The page starts at a zoom that fits the repo's size. Use the level buttons to
 show packages, modules, classes or functions. Double-click a box to open or
