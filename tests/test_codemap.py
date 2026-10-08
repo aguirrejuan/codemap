@@ -90,13 +90,51 @@ def test_diff_marks_the_innermost_symbol_and_its_callers(repo):
 
 def test_module_level_change_reaches_importers(repo):
     path = repo / 'features' / 'compute.py'
-    path.write_text('THRESHOLD = 3\n\n\n' + path.read_text())
+    path.write_text('import json\n\n\n' + path.read_text())
     ix = parse.build(repo)
     changed = diff.changed_symbols(ix, diff.changed_ranges(repo, 'main'))
     assert changed == {'features.compute'}
     hops = diff.blast_radius(ix, changed, depth=1)
     assert hops['features.store'] == 1
     assert hops['dags.daily_features'] == 1
+
+
+def test_constant_change_reaches_its_readers(tmp_path):
+    write(tmp_path, {
+        'app/__init__.py': '',
+        'app/conf.py': (
+            'FEED = "s3://old"\n'
+            'GRAMMAR = {"feed": FEED}\n'
+            'log = None\n'
+            'def check(cfg):\n    return cfg == GRAMMAR\n'
+            'def load():\n    return check({})\n'
+        ),
+        'app/job.py': 'from app.conf import FEED\nimport app.conf as conf\n'
+                      'def run():\n    return FEED\ndef other():\n    return conf.GRAMMAR\n'
+                      '@mark(1)\ndef decorated():\n    return 1\n',
+    })
+    git = lambda *a: subprocess.run(['git', *a], cwd=tmp_path, check=True, capture_output=True)
+    git('init', '-q', '-b', 'main')
+    git('add', '.')
+    git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'chore: seed')
+    job = tmp_path / 'app' / 'job.py'
+    job.write_text(job.read_text().replace('@mark(1)', '@mark(2)'))
+    conf = tmp_path / 'app' / 'conf.py'
+    conf.write_text('# the feed moved\n' + conf.read_text().replace('s3://old', 's3://new'))
+    ix = parse.build(tmp_path)
+    assert ix.nodes['app.conf.FEED']['kind'] == 'constant'
+    assert 'app.conf.log' not in ix.nodes  # lower case is a variable, not a constant
+    assert edge(ix, 'app.conf.GRAMMAR', 'app.conf.FEED', 'reads')
+    assert edge(ix, 'app.conf.check', 'app.conf.GRAMMAR', 'reads')
+    assert edge(ix, 'app.job.other', 'app.conf.GRAMMAR', 'reads')
+    assert ix.nodes['app.conf.check']['fan_out'] == 0  # a read is not a call
+    changed = diff.changed_symbols(ix, diff.changed_ranges(tmp_path, 'main'))
+    # the new comment marks nothing; the decorator belongs to its function
+    assert changed == {'app.conf.FEED', 'app.job.decorated'}
+    changed.discard('app.job.decorated')
+    hops = diff.blast_radius(ix, changed, depth=3)
+    assert hops == {'app.conf.FEED': 0, 'app.job.run': 1, 'app.conf.GRAMMAR': 1,
+                    'app.conf.check': 2, 'app.job.other': 2, 'app.conf.load': 3}
 
 
 def test_mermaid_nests_modules_in_packages(repo):
@@ -159,3 +197,63 @@ def test_cycles_follow_imports_that_run_at_load_time(tmp_path):
     assert ix.nodes['ext:json']['stdlib']
     base, _ = cli.summarise(ix, None)
     assert '1 import cycle, the largest through 3 modules' in base
+
+
+def test_fan_counts_and_uncalled_functions(tmp_path):
+    write(tmp_path, {
+        'app/__init__.py': '',
+        'app/core.py': (
+            'import ast\n'
+            'def used():\n    return helper() + helper()\n'
+            'def helper():\n    return 1\n'
+            'def orphan():\n    return used()\n'
+            'def __getattr__(name):\n    return name\n'
+            '@app.route("/")\n'
+            'def view():\n    return 1\n'
+            'def HOOK():\n    return 1\n'
+            '@staticmethod\n'
+            'def plain():\n    return 1\n'
+            'class Base:\n'
+            '    def run(self):\n        return 1\n'
+            '    def lonely(self):\n        return 1\n'
+            'class Child(Base):\n'
+            '    def run(self):\n        return 2\n'
+            'class Visitor(ast.NodeVisitor):\n'
+            '    def visit_Name(self, node):\n        return node\n'
+            'def poke(obj):\n    obj.poked()\n'
+            'class Thing:\n'
+            '    def poked(self):\n        return 1\n'
+        ),
+        'app/test_core.py': 'def test_it():\n    pass\n',
+    })
+    ix = parse.build(tmp_path)
+    n = ix.nodes
+    assert (n['app.core.helper']['fan_in'], n['app.core.used']['fan_out']) == (1, 1)
+    assert n['app.core.used']['fan_in'] == 1
+    uncalled = {k for k, v in n.items() if v.get('uncalled')}
+    # Base.run and Child.run dispatch to each other, visit_Name is a hook of an outside
+    # base, and `obj.poked()` on an unknown object may reach Thing.poked.
+    assert uncalled == {'app.core.orphan', 'app.core.plain', 'app.core.Base.lonely', 'app.core.poke'}
+    base, _ = cli.summarise(ix, None)
+    assert '4 functions with no callers found' in base
+
+
+def test_head_maps_a_commit_and_leaves_the_working_tree_alone(repo, tmp_path):
+    path = repo / 'features' / 'compute.py'
+    path.write_text(path.read_text().replace('return len(raw)', 'return len(raw) * 2'))
+    git = lambda *a: subprocess.run(['git', *a], cwd=repo, check=True, capture_output=True)
+    git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qam', 'feat: double it')
+    path.write_text(path.read_text().replace('* 2', '* 3'))  # uncommitted, so ignored
+    out = tmp_path / 'map.html'
+    cli.main([str(repo), '--diff', 'main~1', '--head', 'main', '--out', str(out)])
+    page = out.read_text()
+    assert 'return len(raw) * 2' in page and '* 3' not in page
+    assert '"repo":"fraudsvc"' in page
+    worktrees = subprocess.run(['git', 'worktree', 'list'], cwd=repo, capture_output=True, text=True).stdout
+    assert len(worktrees.splitlines()) == 1
+
+
+def test_pr_links_name_the_repo_and_number():
+    m = diff.PR_URL.match('https://github.com/acme/billing/pull/30/files')
+    assert m.groups() == ('acme', 'billing', '30')
+    assert not diff.PR_URL.match('/Users/me/code/repo')

@@ -2,10 +2,12 @@
 
 Nodes carry an explicit kind and a parent, so the hierarchy is the tree itself,
 not a set of `contains` edges. Edges are `calls`, `references` (a function
-passed as a value, such as Airflow's `python_callable=`) and `imports`.
+passed as a value, such as Airflow's `python_callable=`), `reads` (a function or
+constant using a module-level constant) and `imports`.
 """
 import ast
 import os
+import re
 import subprocess
 import sys
 from collections import defaultdict
@@ -14,6 +16,12 @@ SKIP_DIRS = {'.git', '.venv', 'venv', 'env', 'node_modules', 'build', 'dist',
              '__pycache__', '.tox', '.mypy_cache', '.pytest_cache', 'site-packages'}
 SYMBOL_KINDS = ('class', 'function', 'method')
 STDLIB = set(getattr(sys, 'stdlib_module_names', ())) | set(sys.builtin_module_names)
+TEST = re.compile(r'^(tests?|testing|conftest)$|^test_|_tests?$')  # the viewer's Hide tests uses the same rule
+# Decorators that wrap a function without registering it anywhere; any other decorator
+# may hand the function to a framework that calls it, such as a route or a CLI command.
+# A property counts as registered: serializers read it by name, which no call shows.
+PLAIN_DECORATORS = {'staticmethod', 'classmethod', 'cache', 'lru_cache', 'abstractmethod'}
+CONSTANT = re.compile(r'^_*[A-Z][A-Z0-9_]*$')  # module-level names in upper case, by PEP 8
 
 
 def list_files(repo):
@@ -46,6 +54,18 @@ def _defs(body):
                     yield from _defs(inner)
 
 
+def _module_level(body):
+    """Statements that run when the module loads, looking through if/try/with blocks."""
+    for stmt in body:
+        if isinstance(stmt, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        yield stmt
+        for field in ('body', 'orelse', 'finalbody', 'handlers'):
+            inner = getattr(stmt, field, None)
+            if isinstance(inner, list):
+                yield from _module_level(inner)
+
+
 class Index:
     def __init__(self, repo):
         self.repo = repo
@@ -60,6 +80,10 @@ class Index:
         self.cycles = []
         self.unresolved = defaultdict(int)
         self.calls_total = 0
+        self.loose = set()              # attribute names used on objects of unknown type
+        self.hooked = set()             # functions under a decorator that may register them
+        self.imported = set()           # symbols some module imports by name
+        self.const_ast = {}             # id(assignment) -> constant id
         self.errors = []
         self.sources = {}               # file -> text, for the viewer's code panel
         self._exact, self._suffix = {}, defaultdict(set)
@@ -102,6 +126,7 @@ class Index:
                 for k in range(1, len(p)):
                     self._suffix['.'.join(p[k:])].add(mid)
             self._symbols(tree.body, mid, mid, in_class=False)
+            self._constants(tree.body, mid)
             self._collect_imports(mid, tree)
         return self
 
@@ -113,10 +138,32 @@ class Index:
                 self.bases[nid] = d.bases
             else:
                 kind = 'method' if in_class else 'function'
+            start = min([d.lineno] + [x.lineno for x in d.decorator_list])  # decorators belong to it
             self._add(nid, kind, parent, d.name, self.mods.get(mid, {}).get('file') or self.nodes[mid]['file'],
-                      d.lineno, getattr(d, 'end_lineno', d.lineno))
+                      start, getattr(d, 'end_lineno', d.lineno))
             self.ast_id[id(d)] = nid
+            if kind != 'class' and any(
+                    (_dotted(x.func if isinstance(x, ast.Call) else x) or '').split('.')[-1]
+                    not in PLAIN_DECORATORS for x in d.decorator_list):
+                self.hooked.add(nid)
             self._symbols(d.body, nid, mid, in_class=isinstance(d, ast.ClassDef))
+
+    def _constants(self, body, mid):
+        """Upper-case names a module assigns at load time, each a node of its own."""
+        for stmt in _module_level(body):
+            if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1:
+                target = stmt.targets[0]
+            elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
+                target = stmt.target
+            else:
+                continue
+            if not (isinstance(target, ast.Name) and CONSTANT.match(target.id)) \
+                    or (mid, target.id) in self.child:
+                continue
+            nid = f'{mid}.{target.id}'
+            self._add(nid, 'constant', mid, target.id, self.nodes[mid]['file'],
+                      stmt.lineno, getattr(stmt, 'end_lineno', stmt.lineno))
+            self.const_ast[id(stmt)] = nid
 
     def _from_base(self, mid, node):
         """Absolute dotted module name of a `from X import` statement."""
@@ -285,6 +332,8 @@ class Index:
             for target, relative, eager in info.get('import_targets', []):
                 hit = self.resolve_qual(target) if target else None
                 dst = self.module_of(hit) if hit else None
+                if hit and self.nodes[hit]['kind'] in SYMBOL_KINDS:
+                    self.imported.add(hit)
                 if dst:
                     if dst != mid and self.nodes[dst]['kind'] == 'module':
                         self.edges[(mid, dst, 'imports')] += 1
@@ -300,7 +349,81 @@ class Index:
                     self.nodes[ext]['stdlib'] = top in STDLIB
                 self.edges[(mid, ext, 'imports')] += 1
         self.cycles = _cycles(self.eager)
+        self._metrics()
         return self
+
+    # ---- pass 3: fan-in, fan-out, functions nothing calls ------------------
+
+    def _metrics(self):
+        """Count each symbol's distinct callers and callees, and mark the functions with no caller.
+
+        A function stays unmarked when another module imports it by name, or when three or
+        more modules define a top-level function of that name, as migrations define
+        `upgrade`. A call through an object of unknown type resolves to nothing, so a
+        method stays unmarked when its name appears on such an object anywhere in the repo, when a
+        class in its hierarchy defines the same name, or when a base class lives outside
+        the repo and may call it as a hook.
+        """
+        callers, callees = defaultdict(set), defaultdict(set)
+        for s, t, kind in self.edges:
+            if kind in ('calls', 'references'):
+                callers[t].add(s)
+                callees[s].add(t)
+        self._family()
+        tops = defaultdict(int)  # `upgrade` in every migration: a loader calls these by convention
+        for n in self.nodes.values():
+            if n['kind'] == 'function' and self.nodes[n['parent']]['kind'] == 'module':
+                tops[n['label']] += 1
+        self.convention = {k for k, c in tops.items() if c >= 3}
+        for nid, n in self.nodes.items():
+            if n['kind'] not in SYMBOL_KINDS:
+                continue
+            n['fan_in'], n['fan_out'] = len(callers[nid]), len(callees[nid])
+            if n['kind'] != 'class' and not n['fan_in'] and not self._excused(nid):
+                n['uncalled'] = True
+
+    def _family(self):
+        """Each class's project bases and subclasses, and the classes with a base outside the repo."""
+        self.up, self.down, self.foreign = defaultdict(list), defaultdict(list), set()
+        for cid, exprs in self.bases.items():
+            for b in exprs:
+                hit = self.resolve_expr(b, [self.module_of(cid)], {})
+                if hit and self.nodes[hit]['kind'] == 'class':
+                    self.up[cid].append(hit)
+                    self.down[hit].append(cid)
+                elif not (isinstance(b, ast.Name) and b.id == 'object'):
+                    self.foreign.add(cid)
+
+    def _excused(self, nid):
+        n = self.nodes[nid]
+        name = n['label']
+        if name == 'main' or name.isupper() or (name.startswith('__') and name.endswith('__')) \
+                or nid in self.hooked or nid in self.imported:
+            return True
+        if n['kind'] == 'function' and name in self.convention \
+                and self.nodes[n['parent']]['kind'] == 'module':
+            return True
+        if any(TEST.search(p) for p in nid.split('.')):
+            return True
+        if n['kind'] != 'method':
+            return False
+        return name in self.loose or self._dispatched(n['parent'], name)
+
+    def _dispatched(self, cid, name):
+        """Whether another class in cid's hierarchy defines `name`, or an outside base may call it."""
+        seen, todo = {cid}, [(cid, 'up'), (cid, 'down')]
+        while todo:
+            c, way = todo.pop()
+            if way == 'up' and c in self.foreign:
+                return True
+            for o in (self.up if way == 'up' else self.down)[c]:
+                if o in seen:
+                    continue
+                if (o, name) in self.child:
+                    return True
+                seen.add(o)
+                todo.append((o, way))
+        return False
 
     def _attr_types(self, cls_ast, mid):
         cid = self.ast_id[id(cls_ast)]
@@ -494,23 +617,46 @@ class _Linker(ast.NodeVisitor):
             self._edge(target, 'calls')
         else:
             self.ix.unresolved[self.mid] += 1
+            if isinstance(node.func, ast.Attribute):
+                self.ix.loose.add(node.func.attr)
+        if isinstance(node.func, ast.Name) and node.func.id == 'getattr' and len(node.args) > 1 \
+                and isinstance(node.args[1], ast.Constant) and isinstance(node.args[1].value, str):
+            self.ix.loose.add(node.args[1].value)
         self.generic_visit(node)
 
-    def _maybe_reference(self, node):
-        if id(node) in self.call_funcs or not isinstance(getattr(node, 'ctx', None), ast.Load):
-            return False
+    def _assign(self, node):
+        """Reads in a constant's value come from the constant, not from the module."""
+        nid = self.ix.const_ast.get(id(node))
+        if nid is None:
+            return self.generic_visit(node)
+        self.chain.append(nid)
+        self.visit(node.value)
+        self.chain.pop()
+
+    visit_Assign = visit_AnnAssign = _assign
+
+    def _reference(self, node):
+        """Record a function used as a value or a constant read; return what the expression denotes."""
         target = self.ix.resolve_expr(node, self.chain, self.locals[-1])
-        if target and self.ix.nodes[target]['kind'] in ('function', 'method'):
+        kind = target and self.ix.nodes[target]['kind']
+        if kind in ('function', 'method'):
             self._edge(target, 'references')
-            return True
-        return False
+        elif kind == 'constant':
+            self._edge(target, 'reads')
+        return target
 
     def visit_Name(self, node):
-        self._maybe_reference(node)
+        if id(node) not in self.call_funcs and isinstance(node.ctx, ast.Load):
+            self._reference(node)
 
     def visit_Attribute(self, node):
-        if not self._maybe_reference(node):
-            self.generic_visit(node)
+        if id(node) not in self.call_funcs and isinstance(node.ctx, ast.Load):
+            target = self._reference(node)
+            if target is None:
+                self.ix.loose.add(node.attr)
+            elif self.ix.nodes[target]['kind'] in ('function', 'method', 'constant'):
+                return
+        self.generic_visit(node)
 
 
 def build(repo):

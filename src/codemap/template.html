@@ -7,158 +7,277 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/style.css">
 <style>
 :root {
-  --bg: #f7f6f2; --panel: #ffffff; --text: #1f1e1c; --muted: #6b6a65; --border: #d6d4cb;
-  --pkg: rgba(120, 110, 80, .06); --mod: rgba(255, 255, 255, .7); --cls: rgba(60, 110, 180, .07); --sym: #ffffff;
-  --edge: #9a978d; --hl: #185fa5;
-  --changed-bg: #fcebeb; --changed-bd: #a32d2d; --aff-bg: #faeeda; --aff2-bg: #fdf6ea; --aff-bd: #ba7517;
-  --code-bg: #f3f2ed; --code-chg: #fbe3e3;
-  --k-pkg: #7a6f52; --k-mod: #4f6b3a; --k-cls: #2f5f99; --k-fn: #6b4f99;
-  --k-ext: #85837b; --ext: rgba(120, 120, 120, .07); --cyc: #c42b2b;
-  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --bg: #f5f6f8; --panel: #ffffff; --raise: #ffffff; --text: #17191e; --muted: #6a707c; --faint: #9aa0aa;
+  --border: #e2e4e9; --border-2: #d3d6dc; --hover: #f0f1f4;
+  --pkg: rgba(110, 118, 135, .045); --mod: #ffffff; --cls: rgba(59, 111, 214, .045); --sym: #ffffff; --ext: rgba(110, 118, 135, .05);
+  --edge: #a9aeb8; --hl: #4f5bd5; --hl-soft: rgba(79, 91, 213, .12);
+  --changed: #d93f3f; --changed-bg: #fdf0f0; --aff: #c7811a; --aff-bg: #fdf5e7; --aff2-bg: #fefaf2;
+  --code-bg: #f7f8fa; --code-chg: rgba(217, 63, 63, .1);
+  --k-pkg: #a0772a; --k-mod: #2f8a5a; --k-cls: #3b6fd6; --k-fn: #8a4fd0; --k-ext: #7d8390; --k-const: #1d8a8f; --cyc: #d93f3f;
+  --shadow: 0 1px 2px rgba(20, 24, 33, .05), 0 1px 1px rgba(20, 24, 33, .03);
+  --shadow-lg: 0 8px 24px rgba(20, 24, 33, .08), 0 2px 6px rgba(20, 24, 33, .05);
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1b1b19; --panel: #252523; --text: #ecebe6; --muted: #a3a29b; --border: #45443f;
-    --pkg: rgba(255, 245, 220, .035); --mod: rgba(255, 255, 255, .045); --cls: rgba(110, 160, 230, .08); --sym: #2f2f2c;
-    --edge: #85837a; --hl: #85b7eb;
-    --changed-bg: #5a1d1d; --changed-bd: #f09595; --aff-bg: #4f3407; --aff2-bg: #3a2a0d; --aff-bd: #ef9f27;
-    --code-bg: #1f1f1d; --code-chg: #4a1e1e;
-    --k-pkg: #c9bb92; --k-mod: #a8c98f; --k-cls: #8db8ef; --k-fn: #c3a8ef;
-    --k-ext: #a09e96; --ext: rgba(255, 255, 255, .03); --cyc: #ff7b7b;
+    --bg: #0f1115; --panel: #16181d; --raise: #1c1f25; --text: #e7e9ee; --muted: #9298a4; --faint: #646a75;
+    --border: #262a32; --border-2: #323742; --hover: #1f232a;
+    --pkg: rgba(255, 255, 255, .018); --mod: #16181d; --cls: rgba(110, 150, 240, .05); --sym: #1c1f25; --ext: rgba(255, 255, 255, .025);
+    --edge: #4f5562; --hl: #8b95ff; --hl-soft: rgba(139, 149, 255, .16);
+    --changed: #f47272; --changed-bg: #2c1717; --aff: #e9a440; --aff-bg: #2a2012; --aff2-bg: #211b12;
+    --code-bg: #121419; --code-chg: rgba(244, 114, 114, .13);
+    --k-pkg: #d7ad5e; --k-mod: #5fc58f; --k-cls: #79a5f5; --k-fn: #b590f3; --k-ext: #8d93a0; --k-const: #5cc6c9; --cyc: #f47272;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3); --shadow-lg: 0 10px 30px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #1b1b19; --panel: #252523; --text: #ecebe6; --muted: #a3a29b; --border: #45443f;
-  --pkg: rgba(255, 245, 220, .035); --mod: rgba(255, 255, 255, .045); --cls: rgba(110, 160, 230, .08); --sym: #2f2f2c;
-  --edge: #85837a; --hl: #85b7eb;
-  --changed-bg: #5a1d1d; --changed-bd: #f09595; --aff-bg: #4f3407; --aff2-bg: #3a2a0d; --aff-bd: #ef9f27;
-  --code-bg: #1f1f1d; --code-chg: #4a1e1e;
-  --k-pkg: #c9bb92; --k-mod: #a8c98f; --k-cls: #8db8ef; --k-fn: #c3a8ef;
-  --k-ext: #a09e96; --ext: rgba(255, 255, 255, .03); --cyc: #ff7b7b;
+  --bg: #0f1115; --panel: #16181d; --raise: #1c1f25; --text: #e7e9ee; --muted: #9298a4; --faint: #646a75;
+  --border: #262a32; --border-2: #323742; --hover: #1f232a;
+  --pkg: rgba(255, 255, 255, .018); --mod: #16181d; --cls: rgba(110, 150, 240, .05); --sym: #1c1f25; --ext: rgba(255, 255, 255, .025);
+  --edge: #4f5562; --hl: #8b95ff; --hl-soft: rgba(139, 149, 255, .16);
+  --changed: #f47272; --changed-bg: #2c1717; --aff: #e9a440; --aff-bg: #2a2012; --aff2-bg: #211b12;
+  --code-bg: #121419; --code-chg: rgba(244, 114, 114, .13);
+  --k-pkg: #d7ad5e; --k-mod: #5fc58f; --k-cls: #79a5f5; --k-fn: #b590f3; --k-ext: #8d93a0; --k-const: #5cc6c9; --cyc: #f47272;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3); --shadow-lg: 0 10px 30px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body, #app { margin: 0; height: 100%; }
-body { background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { background: var(--bg); color: var(--text); font: 13px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
 #app { display: flex; flex-direction: column; }
-header { padding: 12px 16px 8px; border-bottom: 1px solid var(--border); }
-h1 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
-.summary { color: var(--muted); font-size: 13px; margin: 0; }
-.summary.pr { color: var(--text); }
-.summary.cyc { color: var(--cyc); }
-.summary.cyc a { color: var(--cyc); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; margin-right: 10px; }
-.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.seg button { border: 0; background: var(--panel); color: var(--muted); padding: 5px 10px; font: inherit; font-size: 13px; cursor: pointer; }
-.seg button + button { border-left: 1px solid var(--border); }
-.seg button.on { background: var(--bg); color: var(--text); font-weight: 600; }
-label.chk { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); cursor: pointer; }
-input[type=search] { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); width: 240px; max-width: 100%; }
-button.plain { font: inherit; font-size: 13px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; }
-button.plain:hover { border-color: var(--hl); }
-.focuschip { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 4px 3px 10px; border: 1px solid var(--hl); border-radius: 8px; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
+
+/* header */
+header { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.logo { width: 28px; height: 28px; flex: none; border-radius: 7px; background: var(--text); color: var(--panel); display: grid; place-items: center; }
+.logo svg { width: 16px; height: 16px; }
+.titles { min-width: 0; }
+h1 { font-size: 14px; font-weight: 600; margin: 0; letter-spacing: -.01em; white-space: nowrap; }
+h1 .sep { color: var(--faint); font-weight: 400; margin: 0 6px; }
+.summary { color: var(--muted); font-size: 12px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tools { display: flex; align-items: center; gap: 8px; flex: none; }
+.searchbox { position: relative; }
+.searchbox svg { position: absolute; left: 9px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); color: var(--faint); pointer-events: none; }
+input[type=search] { font-size: 13px; height: 30px; padding: 0 10px 0 30px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); width: 260px; max-width: 100%; transition: border-color .15s, box-shadow .15s, background .15s; }
+input[type=search]:focus { outline: none; background: var(--panel); border-color: var(--hl); box-shadow: 0 0 0 3px var(--hl-soft); }
+input[type=search]::placeholder { color: var(--faint); }
+.iconbtn { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+.iconbtn:hover { background: var(--hover); color: var(--text); }
+.iconbtn svg { width: 15px; height: 15px; }
+
+/* banners under the header: the diff and the import cycles */
+.banners:empty { display: none; }
+.banners { display: flex; flex-direction: column; gap: 6px; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
+.banner { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; font-size: 12.5px; }
+.banner .tag { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; }
+.banner.pr .tag { background: var(--changed-bg); color: var(--changed); }
+.banner.cyc .tag { background: var(--changed-bg); color: var(--cyc); }
+.banner.cyc a { color: var(--text); cursor: pointer; font-size: 12px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px; transition: border-color .15s, color .15s; }
+.banner.cyc a:hover { border-color: var(--cyc); color: var(--cyc); }
+.banner .hint { font-size: 12px; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
+.seg { display: inline-flex; padding: 2px; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 3px 11px; font-size: 12.5px; border-radius: 7px; cursor: pointer; transition: background .15s, color .15s; }
+.seg button:hover { color: var(--text); }
+.seg button.on { background: var(--panel); color: var(--text); font-weight: 600; box-shadow: var(--shadow), 0 0 0 1px var(--border); }
+.toggles { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+label.chk { display: inline-flex; gap: 7px; align-items: center; font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none; }
+label.chk:hover { color: var(--text); }
+label.chk:has(input:checked) { color: var(--text); }
+label.chk input { appearance: none; -webkit-appearance: none; margin: 0; width: 26px; height: 16px; border-radius: 999px; background: var(--border-2); position: relative; cursor: pointer; transition: background .18s; flex: none; }
+label.chk input::before { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform .18s; }
+label.chk input:checked { background: var(--hl); }
+label.chk input:checked::before { transform: translateX(10px); }
+button.plain, a.plain { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; height: 28px; padding: 0 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s; }
+button.plain:hover, a.plain:hover { background: var(--hover); border-color: var(--border-2); text-decoration: none; }
+button.plain.primary { background: var(--hl); border-color: var(--hl); color: #fff; }
+button.plain.primary:hover { filter: brightness(1.08); background: var(--hl); }
+.nodebar { display: flex; gap: 2px; padding: 3px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-lg); }
+.nodebar button { height: 26px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: var(--text); font: 500 12px var(--sans); cursor: pointer; white-space: nowrap; }
+.nodebar button:hover { background: var(--hover); }
+.nodebar button.primary { background: var(--hl); color: #fff; }
+.nodebar button.primary:hover { filter: brightness(1.08); }
+.nodebar .n { color: var(--muted); margin-left: 4px; }
+.nodebar button.primary .n { color: rgba(255,255,255,.75); }
+.focuschip { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 2px 3px 2px 11px; background: var(--hl-soft); color: var(--text); border-radius: 9px; }
 .focuschip b { font-weight: 600; }
-.focuschip .seg button { padding: 2px 8px; }
+.focuschip .lbl { color: var(--hl); font-weight: 600; }
+.focuschip .seg { background: var(--panel); }
+.focuschip .seg button { padding: 1px 8px; }
+.focuschip .x { width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; }
+.focuschip .x:hover { background: var(--panel); color: var(--text); }
+
+/* layout */
 main { flex: 1; display: flex; min-height: 0; }
 .canvas { flex: 1; min-width: 0; position: relative; }
-aside { width: 380px; border-left: 1px solid var(--border); background: var(--panel); padding: 14px 16px; overflow-y: auto; font-size: 13px; }
-aside h2 { font-size: 15px; margin: 0 0 2px; word-break: break-all; }
-aside .meta { color: var(--muted); margin: 0 0 8px; word-break: break-all; }
-aside h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 14px 0 4px; }
-aside ul { list-style: none; margin: 0; padding: 0; }
-aside li { padding: 2px 0; }
-aside a { color: var(--hl); cursor: pointer; text-decoration: none; word-break: break-all; }
-aside a:hover { text-decoration: underline; }
-.actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-.actions a.plain { font-size: 13px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+aside { flex: none; width: 400px; border-left: 1px solid var(--border); background: var(--panel); overflow-y: auto; font-size: 13px; }
+.resizer { flex: none; width: 7px; margin: 0 -4px 0 -3px; position: relative; z-index: 6; cursor: col-resize; touch-action: none; }
+.resizer::after { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: transparent; transition: background .15s; }
+.resizer:hover::after, .resizer.drag::after { background: var(--hl); width: 2px; }
+body.resizing { cursor: col-resize; user-select: none; }
+.iconbtn.on { color: var(--hl); background: var(--hl-soft); border-color: transparent; }
+.pane { padding: 18px 20px 28px; }
+.pane-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+aside h2 { font-size: 17px; font-weight: 650; letter-spacing: -.015em; margin: 0; word-break: break-all; }
+aside .meta { color: var(--muted); margin: 2px 0 0; word-break: break-all; font-size: 12px; }
+aside .path { font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
+aside h3 { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 22px 0 8px; }
+aside h3 .count { font-weight: 500; color: var(--faint); letter-spacing: 0; }
+aside ul { list-style: none; margin: 0 -8px; padding: 0; }
+aside li { display: flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; min-width: 0; }
+aside li:hover { background: var(--hover); }
+aside li a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 12px; }
+aside li .n { flex: none; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+aside a { color: var(--text); cursor: pointer; text-decoration: none; }
+aside li a:hover { color: var(--hl); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; }
 .hint { color: var(--muted); }
-.badge { display: inline-block; font-size: 11px; line-height: 16px; padding: 0 6px; border-radius: 6px; margin-left: 6px; font-weight: 500; }
-.badge.h0 { background: var(--changed-bg); color: var(--changed-bd); }
-.badge.h1, .badge.h2 { background: var(--aff-bg); color: var(--aff-bd); }
-.badge.focus { background: var(--hl); color: var(--panel); }
+.empty { color: var(--faint); font-size: 12px; margin: 0; }
+.callout { margin-top: 18px; padding: 10px 12px; border-radius: 8px; background: var(--changed-bg); color: var(--text); font-size: 12.5px; }
+.callout b { color: var(--cyc); }
+.callout .actions { margin-top: 8px; }
+.callout.idle { background: var(--aff-bg); }
+.callout.idle b { color: var(--aff); }
+.intro p { margin: 0 0 10px; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; margin: 16px 0 0; font-size: 12.5px; color: var(--muted); }
+kbd { font: 500 11px var(--sans); padding: 1px 6px; border: 1px solid var(--border-2); border-bottom-width: 2px; border-radius: 5px; color: var(--text); background: var(--bg); white-space: nowrap; justify-self: start; }
+.cyclist li { flex-wrap: wrap; }
+.cyclist li a { flex: none; font-family: var(--sans); font-weight: 600; color: var(--cyc); }
+.cyclist li .hint { flex: 1; min-width: 0; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { display: inline-flex; align-items: center; font-size: 10.5px; line-height: 16px; padding: 0 6px; border-radius: 999px; margin-left: 6px; font-weight: 600; flex: none; }
+.badge.h0 { background: var(--changed); color: #fff; }
+.badge.h1, .badge.h2 { background: var(--aff-bg); color: var(--aff); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--aff) 35%, transparent); }
+.badge.focus { background: var(--hl); color: #fff; }
 .badge.cyc { color: var(--cyc); box-shadow: inset 0 0 0 1px var(--cyc); }
-pre.code { background: var(--code-bg); border-radius: 8px; padding: 8px 0; margin: 6px 0 0; font: 11.5px/1.55 var(--mono); overflow-x: auto; max-height: 420px; }
-pre.code div { padding: 0 10px 0 0; white-space: pre; }
-pre.code div.chg { background: var(--code-chg); }
-pre.code .ln { display: inline-block; width: 44px; padding-right: 10px; text-align: right; color: var(--muted); user-select: none; }
-.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); padding: 6px 16px; border-top: 1px solid var(--border); }
-.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; border: 1px solid; }
+.badge.none { color: var(--muted); box-shadow: inset 0 0 0 1px var(--border-2); border: 0; background: repeating-linear-gradient(135deg, transparent 0 3px, var(--hover) 3px 5px); }
+.badge.hub { background: var(--hl-soft); color: var(--hl); }
+.pill { display: inline-flex; align-items: center; font: 600 10px/16px var(--mono); padding: 0 6px; border-radius: 5px; text-transform: uppercase; letter-spacing: .03em; color: var(--kc); background: color-mix(in srgb, var(--kc) 13%, transparent); flex: none; }
+pre.code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 0; margin: 0; font: 11.5px/1.6 var(--mono); overflow: auto; max-height: 440px; }
+pre.code div { padding: 0 12px 0 0; white-space: pre; }
+pre.code div.chg { background: var(--code-chg); box-shadow: inset 2px 0 0 var(--changed); }
+pre.code .ln { display: inline-block; width: 42px; padding-right: 12px; text-align: right; color: var(--faint); user-select: none; }
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; }
-.overlay > div { pointer-events: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; max-width: 420px; }
-.busy { position: absolute; top: 10px; left: 12px; z-index: 5; font-size: 12px; color: var(--muted); }
+.overlay > div { pointer-events: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; max-width: 420px; box-shadow: var(--shadow-lg); }
+.busy { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; box-shadow: var(--shadow-lg); }
+.busy::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--border-2); border-top-color: var(--hl); animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .note { padding: 24px; color: var(--muted); }
+.legend { position: absolute; left: 12px; bottom: 12px; z-index: 5; display: flex; flex-wrap: wrap; gap: 4px 14px; max-width: calc(100% - 220px); font-size: 11.5px; color: var(--muted); background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 10px; padding: 6px 12px; box-shadow: var(--shadow); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; border: 1.5px solid; }
+.ln-sw { width: 20px; height: 0; border-top: 1.5px solid var(--edge); }
+.ln-sw.dot { border-top-style: dotted; border-top-width: 2px; }
+.ln-sw.dash { border-top-style: dashed; }
+.ln-sw.read { border-top: 0; height: 1.5px; background: repeating-linear-gradient(90deg, var(--edge) 0 6px, transparent 6px 8px, var(--edge) 8px 10px, transparent 10px 12px); }
 
 /* graph */
 .react-flow { background: var(--bg); }
 .react-flow__edge { pointer-events: none; }
 .react-flow__handle { opacity: 0; width: 1px; height: 1px; min-width: 0; min-height: 0; border: 0; }
 .react-flow__node { cursor: pointer; }
-.card { width: 100%; height: 100%; background: var(--sym); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; justify-content: center; transition: opacity .15s, box-shadow .15s; }
-.card:hover, .box-head:hover { box-shadow: 0 0 0 1.5px var(--hl); }
+.card { position: relative; width: 100%; height: 100%; background: var(--sym); border: 1px solid var(--border); border-radius: 9px; padding: 6px 10px 6px 12px; display: flex; flex-direction: column; justify-content: center; gap: 1px; box-shadow: var(--shadow); overflow: hidden; transition: opacity .2s, box-shadow .15s, border-color .15s, transform .15s; }
+.card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--kc); opacity: .85; }
+.card:hover { border-color: var(--border-2); box-shadow: var(--shadow-lg); }
 .top { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.name { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.005em; }
 .cmeta { font-size: 11px; color: var(--muted); white-space: nowrap; display: flex; align-items: center; }
-.kind { font: 600 9.5px/14px var(--mono); padding: 0 4px; border-radius: 4px; border: 1px solid currentColor; flex: none; text-transform: uppercase; letter-spacing: .02em; }
-.k-package { color: var(--k-pkg); } .k-module { color: var(--k-mod); } .k-class { color: var(--k-cls); } .k-function, .k-method { color: var(--k-fn); } .k-external { color: var(--k-ext); }
-.box { width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 10px; transition: opacity .15s; }
-.box.package { background: var(--pkg); border-style: dashed; }
-.box.module { background: var(--mod); }
-.box.class { background: var(--cls); }
-.box.external { background: var(--ext); border-style: dotted; }
-.card.ext { background: var(--ext); border-style: dashed; }
-.box-head { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 10px 10px 0 0; }
-.box-head .cmeta { margin-left: 2px; }
-.card.h0 { background: var(--changed-bg); border-color: var(--changed-bd); border-width: 1.5px; }
-.card.h1 { background: var(--aff-bg); border-color: var(--aff-bd); border-width: 1.5px; }
-.card.h2 { background: var(--aff2-bg); border-color: var(--aff-bd); }
-.box.h0 { border-color: var(--changed-bd); }
-.box.h1, .box.h2 { border-color: var(--aff-bd); }
-.box.h0 .box-head { background: var(--changed-bg); }
-.box.h1 .box-head, .box.h2 .box-head { background: var(--aff2-bg); }
-.sel.card, .sel.box { box-shadow: 0 0 0 2.5px var(--hl); }
-.focused.card, .focused.box { box-shadow: 0 0 0 2.5px var(--hl); }
-.dim { opacity: .38; }
-.faded { opacity: .3; }
-.react-flow__edge-path { stroke: var(--edge); stroke-width: 1.3; fill: none; }
-.react-flow__edge.references .react-flow__edge-path { stroke-dasharray: 2 3; }
-.react-flow__edge.imports .react-flow__edge-path { stroke-dasharray: 6 4; stroke-width: 1; }
-.react-flow__edge.hot .react-flow__edge-path { stroke: var(--aff-bd); stroke-width: 1.8; }
-.react-flow__edge.cyc .react-flow__edge-path { stroke: var(--cyc); stroke-width: 1.8; }
+.kind { font: 600 9px/15px var(--mono); padding: 0 4px; border-radius: 4px; flex: none; text-transform: uppercase; letter-spacing: .03em; color: var(--kc); background: color-mix(in srgb, var(--kc) 13%, transparent); }
+.k-package { --kc: var(--k-pkg); } .k-module { --kc: var(--k-mod); } .k-class { --kc: var(--k-cls); } .k-function, .k-method { --kc: var(--k-fn); } .k-external { --kc: var(--k-ext); } .k-toplevel { --kc: var(--k-mod); } .k-constant { --kc: var(--k-const); }
+.box { width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 12px; transition: opacity .2s, box-shadow .15s, border-color .15s; }
+.box.package { background: var(--pkg); border-style: dashed; border-color: var(--border-2); }
+.box.module { background: var(--mod); box-shadow: var(--shadow); }
+.box.class { background: var(--cls); border-color: color-mix(in srgb, var(--k-cls) 22%, var(--border)); }
+.box.external { background: var(--ext); border-style: dotted; border-color: var(--border-2); }
+.card.ext { background: var(--ext); border-style: dashed; box-shadow: none; }
+.box-head { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 11px 11px 0 0; }
+.box:hover { border-color: color-mix(in srgb, var(--hl) 45%, var(--border)); }
+.box-head .name { font-size: 12px; }
+.box.package > .box-head .name { color: var(--muted); }
+.box-head .cmeta { margin-left: 2px; color: var(--faint); }
+/* no callers fades to an outline; most-called gets the highlight blue. The diff colours below win. */
+.card.idle { background: transparent; border-style: dashed; border-color: var(--border-2); box-shadow: none; }
+.card.idle::before { background: var(--faint); }
+.card.idle .name, .box.idle > .box-head .name { color: var(--muted); font-weight: 500; }
+.box.idle { border-style: dashed; }
+.card.hub, .box.hub { border-color: color-mix(in srgb, var(--hl) 55%, transparent); }
+.card.hub { background: color-mix(in srgb, var(--hl) 8%, var(--sym)); }
+.card.hub::before { background: var(--hl); opacity: 1; width: 4px; }
+.box.hub > .box-head { background: linear-gradient(90deg, var(--hl-soft), transparent 85%); }
+.card.h0 { background: var(--changed-bg); border-color: color-mix(in srgb, var(--changed) 55%, transparent); }
+.card.h0::before { background: var(--changed); opacity: 1; width: 4px; }
+.card.h1 { background: var(--aff-bg); border-color: color-mix(in srgb, var(--aff) 50%, transparent); }
+.card.h1::before, .card.h2::before { background: var(--aff); opacity: 1; }
+.card.h2 { background: var(--aff2-bg); border-color: color-mix(in srgb, var(--aff) 30%, transparent); }
+.box.h0 { border-color: color-mix(in srgb, var(--changed) 50%, transparent); }
+.box.h1, .box.h2 { border-color: color-mix(in srgb, var(--aff) 45%, transparent); }
+.box.h0 > .box-head { background: linear-gradient(90deg, var(--changed-bg), transparent 85%); }
+.box.h1 > .box-head, .box.h2 > .box-head { background: linear-gradient(90deg, var(--aff2-bg), transparent 85%); }
+.sel.card, .sel.box, .focused.card, .focused.box { border-color: var(--hl); box-shadow: 0 0 0 3px var(--hl-soft), var(--shadow-lg); }
+.dim { opacity: .45; }
+.dim.card { box-shadow: none; }
+.faded { opacity: .28; }
+.react-flow__edge-path { stroke: var(--edge); stroke-width: 1.25; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke .15s, stroke-width .15s; }
+.react-flow__edge { transition: opacity .2s; }
+.react-flow__edge.references .react-flow__edge-path { stroke-dasharray: 1 4; stroke-width: 1.6; }
+.react-flow__edge.imports .react-flow__edge-path { stroke-dasharray: 5 4; stroke-width: 1; }
+.react-flow__edge.reads .react-flow__edge-path { stroke-dasharray: 6 2 2 2; }
+.react-flow__edge.hot .react-flow__edge-path { stroke: var(--aff); stroke-width: 1.7; }
+.react-flow__edge.cyc .react-flow__edge-path { stroke: var(--cyc); stroke-width: 1.7; }
 .react-flow__edge.hl .react-flow__edge-path { stroke: var(--hl); stroke-width: 2.2; }
-.react-flow__edge.faded { opacity: .12; }
-.react-flow__edge.dimmed { opacity: .35; }
-.react-flow__edge-textbg { fill: var(--panel); }
-.react-flow__edge-text { fill: var(--text); font-size: 10px; }
-#cm-defs .base { fill: var(--edge); } #cm-defs .hot { fill: var(--aff-bd); } #cm-defs .hl { fill: var(--hl); } #cm-defs .cyc { fill: var(--cyc); }
-.react-flow__minimap { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; }
-.react-flow__minimap-mask { fill: var(--bg); fill-opacity: .6; }
-.react-flow__minimap-node { fill: var(--muted); stroke: none; }
-.react-flow__minimap-node.h0 { fill: var(--changed-bd); }
-.react-flow__minimap-node.h1, .react-flow__minimap-node.h2 { fill: var(--aff-bd); }
-.react-flow__minimap-node.box { fill: none; stroke: var(--border); stroke-width: 4; }
-.react-flow__minimap-node.box.h0 { stroke: var(--changed-bd); }
-.react-flow__minimap-node.box.h1, .react-flow__minimap-node.box.h2 { stroke: var(--aff-bd); }
-.react-flow__controls { box-shadow: none; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-.react-flow__controls-button { background: var(--panel); border-bottom: 1px solid var(--border); }
-.react-flow__controls-button svg { fill: var(--text); }
+.react-flow__edge.faded { opacity: .1; }
+.react-flow__edge.dimmed { opacity: .3; }
+.react-flow__edge-textbg { fill: var(--panel); stroke: var(--border-2); stroke-width: 1; }
+.react-flow__edge-text { fill: var(--muted); font: 600 9.5px var(--sans); }
+.react-flow__edge.hl .react-flow__edge-text { fill: var(--hl); }
+#cm-defs .base { fill: var(--edge); } #cm-defs .hot { fill: var(--aff); } #cm-defs .hl { fill: var(--hl); } #cm-defs .cyc { fill: var(--cyc); }
+.react-flow__minimap { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-lg); }
+.react-flow__minimap-mask { fill: var(--bg); fill-opacity: .65; }
+.react-flow__minimap-node { fill: var(--border-2); stroke: none; }
+.react-flow__minimap-node.hub { fill: var(--hl); }
+.react-flow__minimap-node.h0 { fill: var(--changed); }
+.react-flow__minimap-node.h1, .react-flow__minimap-node.h2 { fill: var(--aff); }
+.react-flow__minimap-node.box { fill: none; stroke: var(--border-2); stroke-width: 4; }
+.react-flow__minimap-node.box.h0 { stroke: var(--changed); }
+.react-flow__minimap-node.box.h1, .react-flow__minimap-node.box.h2 { stroke: var(--aff); }
+.react-flow__controls { box-shadow: var(--shadow-lg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.react-flow__controls-button { background: var(--panel); border-bottom: 1px solid var(--border); width: 28px; height: 28px; }
+.react-flow__controls-button:hover { background: var(--hover); }
+.react-flow__controls-button:last-child { border-bottom: 0; }
+.react-flow__controls-button svg { fill: var(--muted); max-width: 11px; max-height: 11px; }
 .react-flow__background { background: var(--bg); }
-.react-flow__background circle { fill: var(--border); }
-.react-flow__attribution { background: transparent; }
-.react-flow__attribution a { color: var(--muted); }
+.react-flow__background circle { fill: var(--border-2); }
+.react-flow__attribution { background: transparent; opacity: .5; }
+.react-flow__attribution a { color: var(--faint); }
+@media (max-width: 900px) {
+  header { flex-wrap: wrap; }
+  .tools { width: 100%; }
+  .searchbox { flex: 1; }
+  input[type=search] { width: 100%; }
+}
 @media (max-width: 760px) {
   main { flex-direction: column; }
   .canvas { min-height: 65vh; }
-  aside { width: auto; border-left: 0; border-top: 1px solid var(--border); }
+  aside { width: auto !important; border-left: 0; border-top: 1px solid var(--border); }
+  .resizer { display: none; }
+  .legend { display: none; }
 }
 </style>
 </head>
 <body>
 <svg id="cm-defs" width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <marker id="cm-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="base" d="M0,0 L10,5 L0,10 z"/></marker>
-    <marker id="cm-a-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hot" d="M0,0 L10,5 L0,10 z"/></marker>
-    <marker id="cm-a-hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hl" d="M0,0 L10,5 L0,10 z"/></marker>
-    <marker id="cm-a-cyc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="cyc" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="cm-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="base" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="cm-a-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="hot" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="cm-a-hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="hl" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="cm-a-cyc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="cyc" d="M0,0 L10,5 L0,10 z"/></marker>
   </defs>
 </svg>
 <div id="app"></div>
@@ -179,13 +298,14 @@ if (typeof React === 'undefined' || typeof ReactFlow === 'undefined' || typeof E
 const {createElement: h, useState, useEffect, useMemo, useRef} = React;
 const RF = window.ReactFlow;
 const Flow = RF.ReactFlow || RF.default;
-const {ReactFlowProvider, Handle, Position, BaseEdge, MiniMap, Controls, Background} = RF;
+const {ReactFlowProvider, Handle, Position, BaseEdge, MiniMap, Controls, Background, NodeToolbar} = RF;
+let ACT = null;  // the App's actions, which the node toolbar calls; React Flow wants node types defined once
 
 // ---- the tree ---------------------------------------------------------------
 
-const RANK = {package: 0, module: 1, class: 2, function: 3, method: 3, external: 0};
+const RANK = {package: 0, module: 1, class: 2, function: 3, method: 3, toplevel: 3, constant: 3, external: 0};
 const LEVEL = {package: 0, module: 1, class: 2, function: 3};
-const TAG = {package: 'pkg', module: 'mod', class: 'cls', function: 'fn', method: 'fn', external: 'ext'};
+const TAG = {package: 'pkg', module: 'mod', class: 'cls', function: 'fn', method: 'fn', toplevel: 'top', constant: 'const', external: 'ext'};
 
 // External packages sit in one box at the edge, split into third-party and stdlib.
 const EXT = '@external';
@@ -198,6 +318,21 @@ if (extNodes.length) {
     for (const n of mine) n.parent = id;
   }
   D.nodes.push(...groups);
+}
+// A module's code outside any function gets a card of its own. Once the module opens, the calls
+// that code makes leave from the card instead of from the box's border, beside its functions' calls.
+{
+  const all = new Map(D.nodes.map(n => [n.id, n])), parents = new Set(D.nodes.map(n => n.parent));
+  const tops = new Map();
+  for (const e of D.edges) {
+    const m = all.get(e[0]);
+    if (!m || e[2] === 'imports' || m.kind !== 'module' || !parents.has(m.id)) continue;
+    if (!tops.has(m.id)) tops.set(m.id, {id: m.id + '.<top>', kind: 'toplevel', parent: m.id, label: 'module code', file: m.file, line: 1});
+    e[0] = tops.get(m.id).id;
+  }
+  D.nodes.push(...tops.values());
+  const hops = D.diff && D.diff.hops;
+  if (hops) for (const [m, t] of tops) if (m in hops) hops[t.id] = hops[m];
 }
 // Third-party packages show from the top level; stdlib folds into one card until Modules.
 const rankOf = id => id === EXT || id === EXT + '.third' ? -1 : RANK[byId.get(id).kind];
@@ -233,6 +368,20 @@ const TEST = /^(tests?|testing|conftest)$|^test_|_tests?$/;
 const isTest = id => id.split('.').some(p => TEST.test(p));
 const hasTests = D.nodes.some(n => n.kind === 'module' && isTest(n.id));
 const isExt = id => byId.get(id).kind === 'external';
+
+// Hubs: the most-called symbols, roughly the top 5% by distinct callers and never fewer than 5.
+const byFanIn = D.nodes.filter(n => n.fan_in && !isTest(n.id)).sort((a, b) => b.fan_in - a.fan_in);
+const byFanOut = D.nodes.filter(n => n.fan_out && !isTest(n.id)).sort((a, b) => b.fan_out - a.fan_out);
+const HUB = Math.max(5, byFanIn.length ? byFanIn[Math.floor(byFanIn.length * 0.05)].fan_in : 0);
+const hubs = new Set(byFanIn.filter(n => n.fan_in >= HUB).map(n => n.id));
+const idle = D.nodes.filter(n => n.uncalled).sort((a, b) => a.id < b.id ? -1 : 1);
+const plural = (k, word) => `${k} ${word}${k === 1 ? '' : 's'}`;
+function flagOf(id) {
+  const n = byId.get(id);
+  if (n.uncalled) return {cls: 'none', text: 'no callers', title: 'Nothing in the repo calls this or passes it by name'};
+  if (hubs.has(id)) return {cls: 'hub', text: plural(n.fan_in, 'caller'), title: 'One of the most-called symbols in the repo'};
+  return null;
+}
 const importers = new Map();
 for (const [s, t, kind] of D.edges) if (kind === 'imports' && isExt(t)) importers.set(t, (importers.get(t) || 0) + 1);
 
@@ -275,7 +424,8 @@ function computeView(st) {
     include = id => I.has(id) || anc.has(id);
     open = id => anc.has(id);
   } else {
-    include = id => !(st.hideTests && isTest(id)) && !(st.pr && st.blastOnly && hopOf(id) === undefined) && (st.ext || !isExt(id));
+    include = id => !(st.hideTests && isTest(id)) && !(st.pr && st.blastOnly && hopOf(id) === undefined) && (st.ext || !isExt(id))
+      && (byId.get(id).kind !== 'constant' || id in hops);  // constants show only when the diff reaches them
     open = id => st.expanded.has(id) || (!st.collapsed.has(id) && rankOf(id) < LEVEL[st.level]);
   }
   const vis = [], visSet = new Set();
@@ -297,6 +447,7 @@ function computeView(st) {
   const agg = new Map(), cyc = new Set();
   for (const [s, t, kind, c] of D.edges) {
     if (kind === 'imports' && !imports && !isExt(t)) continue;
+    if (kind === 'reads' && !include(t)) continue;  // a hidden constant folds into nothing
     const a = rep(s), b = rep(t);
     if (!a || !b || a === b) continue;
     if (chain(a).includes(b) || chain(b).includes(a)) continue;  // a box and its own contents
@@ -320,6 +471,8 @@ function metaText(id) {
     const k = n.group ? [...inside(id)].filter(x => !byId.get(x).group).length : importers.get(id) || 0;
     return n.group ? `${k} package${k === 1 ? '' : 's'}` : `${k} importer${k === 1 ? '' : 's'}`;
   }
+  if (n.kind === 'toplevel') return 'outside any function';
+  if (n.kind === 'constant') return n.loc > 1 ? `constant, ${n.loc} lines` : 'constant';
   if (n.kind === 'function' || n.kind === 'method') return n.loc ? `${n.loc} lines` : '';
   if (n.kind === 'class') return `${c - 1} method${c === 2 ? '' : 's'}`;
   return `${c} symbol${c === 1 ? '' : 's'}`;
@@ -339,12 +492,12 @@ async function layout(view) {
   const nodes = new Map(), root = {id: '__root', layoutOptions: ROOT_OPTS, children: [], edges: []};
   for (const id of view.vis) {
     const n = byId.get(id), lw = textW(label(id), `600 12px ${FONT}`), mw = textW(metaText(id), `11px ${FONT}`);
-    const e = {id, children: []}, badge = (D.diff && hopOf(id) !== undefined ? 62 : 0) + (cycleOf.has(id) ? 46 : 0);
+    const e = {id, children: []}, badge = (D.diff && hopOf(id) !== undefined ? 62 : 0) + (cycleOf.has(id) ? 46 : 0) + (flagOf(id) ? 76 : 0);
     if (view.box.has(id)) {  // tag, name, meta and badge share the header
       e.layoutOptions = {'elk.padding': '[top=42,left=14,bottom=14,right=14]',
         'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': `(${Math.ceil(lw + mw + badge + 72)},60)`};
     } else {  // tag and name on top, meta and badge below
-      e.width = Math.min(320, Math.max(120, Math.ceil(Math.max(lw + 62, mw + badge + 26))));
+      e.width = Math.min(320, Math.max(120, Math.ceil(Math.max(lw + 50 + 6 * (TAG[n.kind] || '').length, mw + badge + 26))));
       e.height = 50;
     }
     nodes.set(id, e);
@@ -395,30 +548,58 @@ function Handles() {
   return [h(Handle, {key: 't', type: 'target', position: Position.Left, isConnectable: false}),
           h(Handle, {key: 's', type: 'source', position: Position.Right, isConnectable: false})];
 }
-function Badge({hop, focus, cyc}) {
-  if (cyc) return [h(Badge, {key: 'b', hop, focus}), h('span', {key: 'c', className: 'badge cyc'}, 'cycle')];
-  if (focus) return h('span', {className: 'badge focus'}, 'focus');
-  if (hop === undefined) return null;
-  return h('span', {className: 'badge h' + Math.min(hop, 2)}, hop === 0 ? 'changed' : 'hop ' + hop);
+function Badge({hop, focus, cyc, flag}) {
+  const out = [];
+  if (focus) out.push(h('span', {key: 'f', className: 'badge focus'}, 'focus'));
+  else if (hop !== undefined) out.push(h('span', {key: 'h', className: 'badge h' + Math.min(hop, 2)}, hop === 0 ? 'changed' : 'hop ' + hop));
+  if (cyc) out.push(h('span', {key: 'c', className: 'badge cyc'}, 'cycle'));
+  if (flag) out.push(h('span', {key: 'x', className: 'badge ' + flag.cls, title: flag.title}, flag.text));
+  return out;
+}
+function Bar({data}) {  // Focus and Open/Close float over the selected box, so they work with the panel hidden
+  const b = data.bar;
+  if (!b) return null;
+  const stop = f => e => { e.stopPropagation(); f(); };
+  return h(NodeToolbar, {isVisible: true, position: Position.Top, offset: 8},
+    h('div', {className: 'nodebar'},
+      b.focused ? h('button', {onClick: stop(() => ACT.focus(null))}, 'Exit focus')
+                : h('button', {className: 'primary', onClick: stop(() => ACT.focus(data.id))}, 'Focus'),
+      b.kids ? h('button', {onClick: stop(() => ACT.toggle(data.id))}, b.open ? 'Close' : 'Open', h('span', {className: 'n'}, b.kids)) : null));
 }
 function Card({data}) {
-  return h('div', {className: 'card ' + data.cls, title: data.id},
+  return h('div', {className: 'card k-' + data.kind + ' ' + data.cls, title: data.id},
+    h(Bar, {data}),
     ...Handles(),
     h('div', {className: 'top'}, h('span', {className: 'kind k-' + data.kind}, TAG[data.kind]), h('span', {className: 'name'}, data.label)),
-    h('div', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus, cyc: data.cyc})));
+    h('div', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus, cyc: data.cyc, flag: data.flag})));
 }
 function Box({data}) {
-  return h('div', {className: 'box ' + data.kind + ' ' + data.cls, title: data.id},
+  return h('div', {className: 'box k-' + data.kind + ' ' + data.kind + ' ' + data.cls, title: data.id},
+    h(Bar, {data}),
     ...Handles(),
     h('div', {className: 'box-head'},
       h('span', {className: 'kind k-' + data.kind}, TAG[data.kind]),
       h('span', {className: 'name'}, data.label),
-      h('span', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus, cyc: data.cyc}))));
+      h('span', {className: 'cmeta'}, data.meta, h(Badge, {hop: data.hop, focus: data.focus, cyc: data.cyc, flag: data.flag}))));
+}
+function roundPath(p, r = 8) {  // ELK's orthogonal route with its corners rounded
+  let d = `M${p[0].x},${p[0].y}`;
+  for (let i = 1; i < p.length - 1; i++) {
+    const [a, c, b] = [p[i - 1], p[i], p[i + 1]];
+    const la = Math.hypot(c.x - a.x, c.y - a.y), lb = Math.hypot(b.x - c.x, b.y - c.y);
+    const k = Math.min(r, la / 2, lb / 2);
+    if (!k) { d += ` L${c.x},${c.y}`; continue; }
+    const s = {x: c.x + (a.x - c.x) * k / la, y: c.y + (a.y - c.y) * k / la};
+    const e = {x: c.x + (b.x - c.x) * k / lb, y: c.y + (b.y - c.y) * k / lb};
+    d += ` L${s.x},${s.y} Q${c.x},${c.y} ${e.x},${e.y}`;
+  }
+  const z = p[p.length - 1];
+  return d + ` L${z.x},${z.y}`;
 }
 function FlowEdge({id, data, markerEnd}) {
   const p = data.points;
   if (!p) return null;
-  const path = 'M' + p.map(q => `${q.x},${q.y}`).join(' L');
+  const path = roundPath(p);
   let best = 0, lx = p[0].x, ly = p[0].y;
   for (let i = 1; i < p.length; i++) {  // label the longest segment
     const len = Math.abs(p[i].x - p[i - 1].x) + Math.abs(p[i].y - p[i - 1].y);
@@ -426,7 +607,7 @@ function FlowEdge({id, data, markerEnd}) {
   }
   return h(BaseEdge, {id, path, markerEnd, interactionWidth: 0,
     label: data.count > 1 ? String(data.count) : undefined, labelX: lx, labelY: ly,
-    labelShowBg: true, labelBgPadding: [3, 1], labelBgBorderRadius: 3});
+    labelShowBg: true, labelBgPadding: [5, 2], labelBgBorderRadius: 8});
 }
 const nodeTypes = {card: Card, box: Box};
 const edgeTypes = {flow: FlowEdge};
@@ -438,43 +619,72 @@ function Code({node}) {
   const text = node.file && sources[node.file];
   if (!text || node.kind === 'package') return null;
   const all = text.split('\n');
-  const from = node.kind === 'module' ? 1 : node.line || 1;
-  const to = node.kind === 'module' ? Math.min(all.length, 60) : Math.min(node.end || from, from + 299);
+  const whole = node.kind === 'module' || node.kind === 'toplevel';
+  const from = whole ? 1 : node.line || 1;
+  const to = whole ? Math.min(all.length, 60) : Math.min(node.end || from, from + 299);
   const spans = changedLines(node.file);
   const rows = [];
   for (let i = from; i <= to; i++) {
     const chg = spans.some(([a, b]) => i >= a && i <= b);
     rows.push(h('div', {key: i, className: chg ? 'chg' : ''}, h('span', {className: 'ln'}, i), all[i - 1]));
   }
-  const cut = node.kind === 'module' ? all.length > 60 : (node.end || from) > to;
-  return [h('h3', {key: 'h'}, node.kind === 'module' ? 'Source (top of file)' : 'Source'),
+  const cut = whole ? all.length > 60 : (node.end || from) > to;
+  return [h('h3', {key: 'h'}, whole ? 'Source (top of file)' : 'Source'),
           h('pre', {key: 'c', className: 'code'}, rows),
           cut ? h('p', {key: 'm', className: 'hint'}, 'Cut short; open the file for the rest.') : null];
 }
+function Section({title, m, go, st}) {
+  return [h('h3', {key: 'h'}, title, m.size ? h('span', {className: 'count'}, m.size) : null),
+          h(Links, {key: 'l', m, go, st})];
+}
 function Links({m, go, st}) {
-  if (!m.size) return h('p', {className: 'hint'}, 'none');
+  if (!m.size) return h('p', {className: 'empty'}, 'None');
   const rows = [...m].sort((x, y) => y[1] - x[1]);
   return h('ul', null, rows.slice(0, 40).map(([k, c]) => {
     const [other, kind] = k.split('|');
     return h('li', {key: k},
-      h('a', {onClick: () => go(other)}, other),
-      c > 1 ? ' ×' + c : '',
-      kind === 'references' ? h('span', {className: 'hint'}, ` (${kind})`) : null,
-      st.pr ? h(Badge, {hop: hops[other]}) : null);
+      h('span', {className: 'pill k-' + byId.get(other).kind}, TAG[byId.get(other).kind]),
+      h('a', {onClick: () => go(other), title: other}, other),
+      kind === 'references' ? h('span', {className: 'n'}, 'by value') : kind === 'reads' ? h('span', {className: 'n'}, 'reads') : null,
+      st.pr ? h(Badge, {hop: hops[other]}) : null,
+      c > 1 ? h('span', {className: 'n'}, '×' + c) : null);
   }), rows.length > 40 ? h('li', {className: 'hint'}, `and ${rows.length - 40} more`) : null);
 }
 function CycleList({act}) {
-  return h('ul', null, cycles.map((c, i) => h('li', {key: i},
-    h('a', {onClick: () => act.cycle(i)}, `${c.modules.length} modules`), ': ',
+  return h('ul', {className: 'cyclist'}, cycles.map((c, i) => h('li', {key: i},
+    h('a', {onClick: () => act.cycle(i)}, `${c.modules.length} modules`),
     h('span', {className: 'hint'}, c.modules.slice(0, 4).join(', ') + (c.modules.length > 4 ? ', …' : '')))));
 }
+function Ranked({rows, act, count}) {  // symbols with a number beside each, e.g. the most-called
+  return h('ul', null, rows.slice(0, 40).map(n => h('li', {key: n.id},
+    h('span', {className: 'pill k-' + n.kind}, TAG[n.kind]),
+    h('a', {onClick: () => act.go(n.id), title: n.id}, n.id),
+    count ? h('span', {className: 'n'}, count(n)) : null)),
+    rows.length > 40 ? h('li', {className: 'hint'}, `and ${rows.length - 40} more`) : null);
+}
 function Info({id, st, act}) {
-  if (!id) return h('div', null,
-    h('p', {className: 'hint'}, 'Click a box to see its code, what it calls and what calls it.'),
-    h('p', {className: 'hint'}, 'Double-click a box to open or close it. Focus shows one symbol with only its callers and callees.'),
-    cycles.length ? [h('h3', {key: 'h'}, 'Import cycles'),
+  if (!id) return h('div', {className: 'pane intro'},
+    h('h2', null, D.repo),
+    h('p', {className: 'meta', style: {marginBottom: 14}}, D.summary),
+    h('p', {className: 'hint'}, 'Pick a box to read its code and see what it calls and what calls it.'),
+    h('div', {className: 'keys'},
+      h('kbd', null, 'Click'), h('span', null, 'show code, calls and callers'),
+      h('kbd', null, 'Double-click'), h('span', null, 'open or close a box'),
+      h('kbd', null, 'Hover'), h('span', null, 'light up a box’s edges'),
+      h('kbd', null, 'Esc'), h('span', null, 'leave focus, clear the selection'),
+      h('kbd', null, '\\'), h('span', null, 'hide or show this panel; drag its edge to resize, or off the screen to hide it')),
+    cycles.length ? [h('h3', {key: 'h'}, 'Import cycles', h('span', {className: 'count'}, cycles.length)),
       h('p', {key: 'p', className: 'hint'}, 'Each group imports itself back at load time, through one module or a chain.'),
       h(CycleList, {key: 'l', act})] : null,
+    byFanIn.length ? [h('h3', {key: 'h'}, 'Most called'),
+      h('p', {key: 'p', className: 'hint'}, 'Distinct callers. A change here reaches the most code.'),
+      h(Ranked, {key: 'l', rows: byFanIn.slice(0, 8), act, count: n => '←' + n.fan_in})] : null,
+    byFanOut.length ? [h('h3', {key: 'h'}, 'Calls the most'),
+      h('p', {key: 'p', className: 'hint'}, 'Distinct callees. A long list often means the function does several jobs.'),
+      h(Ranked, {key: 'l', rows: byFanOut.slice(0, 8), act, count: n => n.fan_out + '→'})] : null,
+    idle.length ? [h('h3', {key: 'h'}, 'No callers found', h('span', {className: 'count'}, idle.length)),
+      h('p', {key: 'p', className: 'hint'}, 'Nothing in the repo calls these or passes them by name. Check for dynamic use before deleting one.'),
+      h(Ranked, {key: 'l', rows: idle, act})] : null,
     D.errors && D.errors.length ? h('p', {className: 'hint'}, `${D.errors.length} files failed to parse: ${D.errors.slice(0, 5).join(', ')}`) : null);
   const n = byId.get(id), mine = inside(id), out = new Map(), inn = new Map(), imp = new Map(), impBy = new Map();
   for (const [s, t, kind, c] of D.edges) {
@@ -482,35 +692,41 @@ function Info({id, st, act}) {
     if (mine.has(s) && !mine.has(t)) { const k = t + '|' + kind; o.set(k, (o.get(k) || 0) + c); }
     if (mine.has(t) && !mine.has(s)) { const k = s + '|' + kind; i.set(k, (i.get(k) || 0) + c); }
   }
-  const where = n.file ? n.file + (n.line && n.kind !== 'module' ? ':' + n.line : '')
+  const where = n.file ? n.file + (n.line && n.kind !== 'module' && n.kind !== 'toplevel' ? ':' + n.line : '')
     : n.kind !== 'external' ? 'directory' : n.group ? 'outside the repo' : n.stdlib ? 'standard library' : 'third-party';
   const ext = n.kind === 'external', cyc = cycleOf.get(id);
-  const kidsN = (kids.get(id) || []).length;
   const editor = n.file && D.root ? `vscode://file/${D.root}/${n.file}:${n.line || 1}` : null;
-  return h('div', null,
-    h('h2', null, n.label, st.pr ? h(Badge, {hop: hopOf(id)}) : null),
-    h('p', {className: 'meta'}, `${n.kind} · ${where}${n.loc ? ' · ' + n.loc + ' lines' : ''}`),
-    h('p', {className: 'meta'}, id),
+  return h('div', {className: 'pane'},
+    h('div', {className: 'pane-head'},
+      h('span', {className: 'pill k-' + n.kind}, n.group ? 'group' : n.kind),
+      st.pr ? h(Badge, {hop: hopOf(id)}) : null),
+    h('h2', null, label(id)),
+    h('p', {className: 'meta'}, where + (n.loc ? ` · ${n.loc} lines` : '') +
+      (n.fan_in !== undefined ? ` · ${plural(n.fan_in, 'caller')}, ${plural(n.fan_out, 'callee')}` : '')),
+    id !== n.label ? h('p', {className: 'meta path'}, id) : null,
     n.kind === 'module' && D.unresolved[id] ? h('p', {className: 'meta'}, `${D.unresolved[id]} calls go to stdlib, third-party or dynamic code`) : null,
-    h('div', {className: 'actions'},
-      st.focus === id ? h('button', {className: 'plain', onClick: () => act.focus(null)}, 'Exit focus')
-                      : h('button', {className: 'plain', onClick: () => act.focus(id)}, 'Focus'),
-      kidsN && !st.focus ? h('button', {className: 'plain', onClick: () => act.toggle(id)}, `Open or close (${kidsN} inside)`) : null,
-      editor ? h('a', {className: 'plain', href: editor}, 'Open in VS Code') : null),
-    cyc !== undefined ? [h('h3', {key: 'ch'}, 'Import cycle'),
-      h('p', {key: 'cp', className: 'hint'}, `This module and ${cycles[cyc].modules.length - 1} others import each other at load time.`),
-      h('div', {key: 'ca', className: 'actions'}, h('button', {className: 'plain', onClick: () => act.cycle(cyc)}, 'Show the cycle'))] : null,
+    editor ? h('div', {className: 'actions'}, h('a', {className: 'plain', href: editor}, 'Open in VS Code')) : null,
+    cyc !== undefined ? h('div', {className: 'callout'},
+      h('b', null, 'Import cycle. '), `This module and ${cycles[cyc].modules.length - 1} others import each other at load time.`,
+      h('div', {className: 'actions'}, h('button', {className: 'plain', onClick: () => act.cycle(cyc)}, 'Show the cycle'))) : null,
+    n.uncalled ? h('div', {className: 'callout idle'},
+      h('b', null, 'No callers found. '), 'Nothing in the repo calls this or passes it by name. ',
+      'Before deleting it, search for dynamic use: getattr, string paths in config, or a framework hook.') : null,
     h(Code, {node: n}),
-    ext ? null : [h('h3', {key: 'o'}, 'Calls out'), h(Links, {key: 'ol', m: out, go: act.go, st}),
-                  h('h3', {key: 'n'}, 'Called by'), h(Links, {key: 'nl', m: inn, go: act.go, st})],
-    n.kind === 'function' || n.kind === 'method' || n.kind === 'class' ? null : [
-      ext ? null : h('h3', {key: 'i'}, 'Imports'), ext ? null : h(Links, {key: 'il', m: imp, go: act.go, st}),
-      h('h3', {key: 'b'}, 'Imported by'), h(Links, {key: 'bl', m: impBy, go: act.go, st})]);
+    ext ? null : n.kind === 'constant'
+      ? [h(Section, {key: 'o', title: 'Reads', m: out, go: act.go, st}),
+         h(Section, {key: 'n', title: 'Read by', m: inn, go: act.go, st})]
+      : [h(Section, {key: 'o', title: 'Calls', m: out, go: act.go, st}),
+         h(Section, {key: 'n', title: 'Called by', m: inn, go: act.go, st})],
+    ['function', 'method', 'class', 'constant'].includes(n.kind) ? null : [
+      ext ? null : h(Section, {key: 'i', title: 'Imports', m: imp, go: act.go, st}),
+      h(Section, {key: 'b', title: 'Imported by', m: impBy, go: act.go, st})]);
 }
 
 // ---- app ------------------------------------------------------------------------------
 
 const nMods = D.nodes.filter(n => n.kind === 'module').length;
+const hasReads = D.edges.some(e => e[2] === 'reads');
 
 function App() {
   const [st, setSt] = useState({
@@ -523,6 +739,34 @@ function App() {
   const [hover, setHover] = useState(null);
   const [lay, setLay] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [panel, setPanel] = useState(() => {
+    const p = {open: true, width: 400};
+    try { Object.assign(p, JSON.parse(localStorage.getItem('codemap-panel')) || {}); } catch (e) {}
+    return p;
+  });
+  useEffect(() => { try { localStorage.setItem('codemap-panel', JSON.stringify(panel)); } catch (e) {} }, [panel]);
+  const drag = e => {  // the handle sits on the panel's left edge, so the width is the distance to the window's right
+    e.preventDefault();
+    const handle = e.currentTarget;
+    const start = panel.width;
+    handle.setPointerCapture(e.pointerId);
+    handle.classList.add('drag');
+    document.body.classList.add('resizing');
+    const move = ev => {
+      const w = window.innerWidth - ev.clientX;
+      if (w < 160) { up(); setPanel({open: false, width: start}); return; }  // dragged most of the way off: hide it, keep the old width
+      setPanel(p => ({...p, width: Math.round(Math.max(280, Math.min(window.innerWidth - 320, w)))}));
+    };
+    const up = () => {
+      handle.classList.remove('drag');
+      document.body.classList.remove('resizing');
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+  };
   const [query, setQuery] = useState('');
   const rf = useRef(null), after = useRef({fit: true});
   const set = patch => setSt(s => ({...s, ...patch}));
@@ -540,14 +784,14 @@ function App() {
   }, [view, tooBig]);
 
   useEffect(() => {  // move the camera once the new layout is on screen
-    if (!lay || !rf.current) return;
+    if (!lay || !ready) return;
     const a = after.current; after.current = {};
     requestAnimationFrame(() => {
       const box = a.center && lay.abs.get(lay.view.rep(a.center) || a.center);
       if (box) rf.current.setCenter(box.x + box.w / 2, box.y + Math.min(box.h / 2, 200), {zoom: Math.max(rf.current.getZoom(), 0.85), duration: 300});
       else if (a.fit) fit(lay, 200);
     });
-  }, [lay]);
+  }, [lay, ready]);
 
   const fit = (l, duration) => {  // from ELK's sizes, so it works before React Flow measures the nodes
     if (!l || !l.bounds || !rf.current) return;
@@ -576,7 +820,7 @@ function App() {
     },
     go(id) {  // follow a link from the side panel or the search box
       setSel(id);
-      if (st.focus) { after.current = {fit: true}; set({focus: id}); return; }
+      if (st.focus || (byId.get(id).kind === 'constant' && !(id in hops))) { after.current = {fit: true}; set({focus: id, cycle: null}); return; }
       const e = new Set(st.expanded), c = new Set(st.collapsed);
       for (const a of chain(id).slice(1)) { c.delete(a); e.add(a); }
       const patch = {expanded: e, collapsed: c, cycle: null};
@@ -589,96 +833,113 @@ function App() {
   };
 
   useEffect(() => {
-    const onKey = e => { if (e.key === 'Escape') { if (st.focus || st.cycle !== null) act.focus(null); else setSel(null); } };
+    const onKey = e => {
+      if (e.key === '\\' && !/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) { setPanel(p => ({...p, open: !p.open})); return; }
+      if (e.key === 'Escape') { if (st.focus || st.cycle !== null) act.focus(null); else setSel(null); }
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  // Highlight what touches the hovered or selected box.
-  const hl = hover || (sel && lay ? lay.view.rep(sel) : null);
+  // Highlight what touches the selected box, or the hovered one when nothing is selected.
+  // An open box counts with everything inside it, so selecting it never greys its own contents.
+  const hl = sel && lay ? lay.view.rep(sel) : hover;
+  const mine = useMemo(() => hl ? inside(hl) : null, [hl]);
   const near = useMemo(() => {
-    if (!hl || !lay) return null;
-    const s = new Set([hl]);
-    for (const e of lay.view.edges) { if (e.a === hl) s.add(e.b); if (e.b === hl) s.add(e.a); }
+    if (!mine || !lay) return null;
+    const s = new Set(mine);
+    for (const e of lay.view.edges) { if (mine.has(e.a)) s.add(e.b); if (mine.has(e.b)) s.add(e.a); }
     return s;
-  }, [hl, lay]);
+  }, [mine, lay]);
 
+  ACT = act;
+  const bar = (id, isBox) => ({focused: id === st.focus,
+    kids: !st.focus && st.cycle === null ? (kids.get(id) || []).length : 0, open: isBox});
   const rfNodes = useMemo(() => {
     if (!lay) return [];
     const selRep = sel ? lay.view.rep(sel) : null;
     return lay.nodes.map(n => {
       const node = byId.get(n.id), isBox = lay.view.box.has(n.id);
-      const hop = st.pr ? hopOf(n.id) : undefined;
+      const hop = st.pr ? hopOf(n.id) : undefined, flag = flagOf(n.id);
       const cls = [hop !== undefined ? 'h' + Math.min(hop, 2) : (st.pr && !st.focus ? 'dim' : ''), node.kind === 'external' && !isBox ? 'ext' : '',
-                   n.id === selRep ? 'sel' : '', n.id === st.focus ? 'focused' : '',
+                   flag ? (flag.cls === 'hub' ? 'hub' : 'idle') : '', n.id === selRep ? 'sel' : '', n.id === st.focus ? 'focused' : '',
                    near && !isBox && !near.has(n.id) ? 'faded' : ''].join(' ');
       return {id: n.id, type: isBox ? 'box' : 'card', position: {x: n.x, y: n.y}, parentNode: n.parent,
               style: {width: n.w, height: n.h}, draggable: false, selectable: false, connectable: false,
-              data: {id: n.id, kind: node.kind, label: label(n.id), meta: metaText(n.id), hop, cls, focus: n.id === st.focus, cyc: cycleOf.has(n.id)}};
+              data: {id: n.id, kind: node.kind, bar: n.id === selRep ? bar(n.id, isBox) : null, label: label(n.id), meta: metaText(n.id), hop, cls, focus: n.id === st.focus, cyc: cycleOf.has(n.id), flag}};
     });
-  }, [lay, st.pr, st.focus, sel, near]);
+  }, [lay, st.pr, st.focus, st.cycle, sel, near]);
 
   const rfEdges = useMemo(() => {
     if (!lay) return [];
     return lay.view.edges.map(e => {
       const hot = st.pr && hopOf(e.a) !== undefined && hopOf(e.b) !== undefined;
-      const on = hl && (e.a === hl || e.b === hl);
+      const on = mine && (mine.has(e.a) || mine.has(e.b));
       const cls = [e.kind, on ? 'hl' : e.cyc ? 'cyc' : hot ? 'hot' : '', hl && !on ? 'faded' : (st.pr && !hot && !e.cyc && !st.focus ? 'dimmed' : '')].join(' ');
       return {id: e.id, source: e.a, target: e.b, type: 'flow', className: cls, zIndex: 1000,
               markerEnd: on ? 'cm-a-hl' : e.cyc ? 'cm-a-cyc' : hot ? 'cm-a-hot' : 'cm-a',
               data: {points: lay.pts.get(e.id), count: e.count, kind: e.kind}};
     });
-  }, [lay, st.pr, st.focus, hl]);
+  }, [lay, st.pr, st.focus, hl, mine]);
 
   const search = q => {
     setQuery(q);
     const s = q.trim();
     if (!s) return;
-    const hit = byId.get(s) || D.nodes.find(n => n.label === s || n.id.endsWith('.' + s));
+    const hit = byId.get(s) || D.nodes.find(n => n.kind !== 'toplevel' && (n.label === s || n.id.endsWith('.' + s)));
     if (hit) { act.go(hit.id); setQuery(''); }
   };
 
   const levels = ['package', 'module', 'class', 'function'];
   const names = {package: 'Packages', module: 'Modules', class: 'Classes', function: 'Functions'};
+  const chk = (on, onChange, text) => h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: on, onChange: e => onChange(e.target.checked)}), text);
+  const refit = patch => { after.current = {fit: true}; set(patch); };
   return h(React.Fragment, null,
     h('header', null,
-      h('h1', null, 'codemap · ' + D.repo),
-      h('p', {className: 'summary'}, D.summary),
-      D.diff ? h('p', {className: 'summary pr'}, `Since ${D.diff.base}: ${D.diff.summary}`) : null,
-      cycles.length ? h('p', {className: 'summary cyc'}, 'Import cycles: ', cycles.slice(0, 8).map((c, i) =>
-        h('a', {key: i, onClick: () => act.cycle(i), title: c.modules.join('\n')},
+      h('div', {className: 'brand'},
+        h('div', {className: 'logo', 'aria-hidden': true}, ICON.logo),
+        h('div', {className: 'titles'},
+          h('h1', null, 'codemap', h('span', {className: 'sep'}, '/'), D.repo),
+          h('p', {className: 'summary', title: D.summary}, D.summary))),
+      h('div', {className: 'tools'},
+        h('div', {className: 'searchbox'}, ICON.search,
+          h('input', {type: 'search', list: 'ids', value: query, placeholder: 'Find a symbol, e.g. get_features',
+            onChange: e => search(e.target.value), onKeyDown: e => { if (e.key === 'Enter') search(e.target.value); }})),
+        h('button', {className: 'iconbtn', title: 'Fit the map to the screen', onClick: () => fit(lay, 200)}, ICON.fit),
+        h('button', {className: 'iconbtn', title: 'Switch light and dark', onClick: flipTheme}, ICON.theme),
+        h('button', {className: 'iconbtn' + (panel.open ? ' on' : ''), title: (panel.open ? 'Hide' : 'Show') + ' the side panel (\\)',
+          'aria-pressed': panel.open, onClick: () => setPanel(p => ({...p, open: !p.open}))}, ICON.panel))),
+    h('div', {className: 'banners'},
+      D.diff ? h('div', {className: 'banner pr'}, h('span', {className: 'tag'}, D.diff.pr || 'Since ' + D.diff.base), D.diff.summary) : null,
+      cycles.length ? h('div', {className: 'banner cyc'}, h('span', {className: 'tag'}, `${cycles.length} import cycle${cycles.length === 1 ? '' : 's'}`),
+        cycles.slice(0, 8).map((c, i) => h('a', {key: i, onClick: () => act.cycle(i), title: c.modules.join('\n')},
           c.modules.slice(0, 2).map(m => byId.get(m).label).join(' ⇄ ') + (c.modules.length > 2 ? ` +${c.modules.length - 2}` : ''))),
-        cycles.length > 8 ? `and ${cycles.length - 8} more` : null) : null),
+        cycles.length > 8 ? h('span', {className: 'hint'}, `and ${cycles.length - 8} more`) : null) : null),
     h('div', {className: 'controls'},
       h('div', {className: 'seg', role: 'group', 'aria-label': 'Zoom level'},
         levels.map(l => h('button', {key: l, className: !st.focus && st.cycle === null && st.level === l ? 'on' : '',
-          onClick: () => { after.current = {fit: true}; set({level: l, expanded: new Set(), collapsed: new Set(), focus: null, cycle: null, force: false}); }}, names[l]))),
-      st.focus ? h('span', {className: 'focuschip'}, 'Focus: ', h('b', null, byId.get(st.focus).label), ' · hops',
+          onClick: () => refit({level: l, expanded: new Set(), collapsed: new Set(), focus: null, cycle: null, force: false})}, names[l]))),
+      st.focus ? h('span', {className: 'focuschip'}, h('span', {className: 'lbl'}, 'Focus'), h('b', null, byId.get(st.focus).label), h('span', {className: 'hint'}, 'hops'),
         h('div', {className: 'seg'}, [1, 2, 3].map(d => h('button', {key: d, className: st.depth === d ? 'on' : '',
-          onClick: () => { after.current = {fit: true}; set({depth: d}); }}, d))),
-        h('button', {className: 'plain', onClick: () => act.focus(null), title: 'Exit focus (Esc)'}, '×')) : null,
-      st.cycle !== null ? h('span', {className: 'focuschip'}, 'Import cycle: ', h('b', null, `${cycles[st.cycle].modules.length} modules`),
-        h('button', {className: 'plain', onClick: () => act.focus(null), title: 'Leave the cycle (Esc)'}, '×')) : null,
-      D.diff ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.pr, onChange: e => set({pr: e.target.checked})}), 'PR mode') : null,
-      D.diff && !st.focus ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.blastOnly,
-        onChange: e => { after.current = {fit: true}; set({blastOnly: e.target.checked}); }}), 'Blast radius only') : null,
-      hasTests ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.hideTests,
-        onChange: e => { after.current = {fit: true}; set({hideTests: e.target.checked}); }}), 'Hide tests') : null,
-      h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.imports, onChange: e => set({imports: e.target.checked})}), 'Show imports'),
-      extNodes.length ? h('label', {className: 'chk'}, h('input', {type: 'checkbox', checked: st.ext,
-        onChange: e => { after.current = {fit: true}; set({ext: e.target.checked}); }}), 'External packages') : null,
-      h('input', {type: 'search', list: 'ids', value: query, placeholder: 'Find a symbol, e.g. get_features',
-        onChange: e => search(e.target.value), onKeyDown: e => { if (e.key === 'Enter') search(e.target.value); }}),
-      h('button', {className: 'plain', onClick: () => fit(lay, 200)}, 'Fit')),
+          onClick: () => refit({depth: d})}, d))),
+        h('button', {className: 'x', onClick: () => act.focus(null), title: 'Exit focus (Esc)'}, '×')) : null,
+      st.cycle !== null ? h('span', {className: 'focuschip'}, h('span', {className: 'lbl'}, 'Import cycle'), h('b', null, `${cycles[st.cycle].modules.length} modules`),
+        h('button', {className: 'x', onClick: () => act.focus(null), title: 'Leave the cycle (Esc)'}, '×')) : null,
+      h('div', {className: 'toggles'},
+        D.diff ? chk(st.pr, v => set({pr: v}), 'PR mode') : null,
+        D.diff && !st.focus ? chk(st.blastOnly, v => refit({blastOnly: v}), 'Blast radius only') : null,
+        hasTests ? chk(st.hideTests, v => refit({hideTests: v}), 'Hide tests') : null,
+        chk(st.imports, v => set({imports: v}), 'Imports'),
+        extNodes.length ? chk(st.ext, v => refit({ext: v}), 'External packages') : null)),
     h('main', null,
       h('div', {className: 'canvas'},
-        busy ? h('div', {className: 'busy'}, 'Laying out…') : null,
+        busy ? h('div', {className: 'busy'}, 'Laying out') : null,
         tooBig ? h('div', {className: 'overlay'}, h('div', null,
           h('p', {style: {marginTop: 0}}, `This view holds ${view.vis.length} boxes, which takes a while to lay out.`),
           h('p', {className: 'hint'}, 'Pick a coarser level and open packages one at a time, or focus on a symbol from the search box.'),
           h('button', {className: 'plain', onClick: () => set({force: true})}, 'Lay it out anyway'))) : null,
         h(Flow, {nodes: rfNodes, edges: rfEdges, nodeTypes, edgeTypes,
-          onInit: inst => { rf.current = inst; },
+          onInit: inst => { rf.current = inst; setReady(true); },
           onNodeClick: (_, n) => setSel(n.id),
           onNodeDoubleClick: (_, n) => act.toggle(n.id),
           onNodeMouseEnter: (_, n) => setHover(n.id),
@@ -686,22 +947,47 @@ function App() {
           onPaneClick: () => setSel(null),
           nodesDraggable: false, nodesConnectable: false, elementsSelectable: false,
           zoomOnDoubleClick: false, minZoom: 0.03, maxZoom: 2.5, onlyRenderVisibleElements: true},
-          h(Background, {gap: 22, size: 1}),
-          h(Controls, {showInteractive: false}),
-          rfNodes.length > 40 && h(MiniMap, {style: {width: 170, height: 110}, pannable: true, zoomable: true, nodeClassName: n => (n.type === 'box' ? 'box ' : '') + (n.data.hop !== undefined ? 'h' + Math.min(n.data.hop, 2) : '')}))),
-      h('aside', null, h(Info, {id: sel, st, act}))),
-    h('div', {className: 'legend'},
-      D.diff ? [h('span', {key: 'c'}, h('span', {className: 'sw', style: {background: 'var(--changed-bg)', borderColor: 'var(--changed-bd)'}}), 'changed'),
-                h('span', {key: '1'}, h('span', {className: 'sw', style: {background: 'var(--aff-bg)', borderColor: 'var(--aff-bd)'}}), 'caller, 1 hop'),
-                h('span', {key: '2'}, h('span', {className: 'sw', style: {background: 'var(--aff2-bg)', borderColor: 'var(--aff-bd)'}}), 'caller, 2+ hops')] : null,
-      cycles.length ? h('span', null, h('span', {className: 'sw', style: {background: 'var(--cyc)', borderColor: 'var(--cyc)'}}), 'import cycle') : null,
-      h('span', null, 'solid = calls · dotted = passed as a value · dashed = imports · number = call sites folded together')));
+          h(Background, {gap: 24, size: 1.2}),
+          h(Controls, {showInteractive: false, position: 'bottom-right'}),
+          rfNodes.length > 40 && h(MiniMap, {position: 'top-right', style: {width: 180, height: 120}, pannable: true, zoomable: true, nodeClassName: n => (n.type === 'box' ? 'box ' : '') + (n.data.hop !== undefined ? 'h' + Math.min(n.data.hop, 2) : n.data.flag && n.data.flag.cls === 'hub' ? 'hub' : '')})),
+        h('div', {className: 'legend'},
+          D.diff ? [h('span', {key: 'c'}, h('span', {className: 'sw', style: {background: 'var(--changed-bg)', borderColor: 'var(--changed)'}}), 'changed'),
+                    h('span', {key: '1'}, h('span', {className: 'sw', style: {background: 'var(--aff-bg)', borderColor: 'var(--aff)'}}), 'caller, 1 hop'),
+                    h('span', {key: '2'}, h('span', {className: 'sw', style: {background: 'var(--aff2-bg)', borderColor: 'var(--aff)'}}), '2+ hops')] : null,
+          cycles.length ? h('span', null, h('span', {className: 'sw', style: {background: 'var(--cyc)', borderColor: 'var(--cyc)'}}), 'import cycle') : null,
+          hubs.size ? h('span', null, h('span', {className: 'sw', style: {background: 'var(--hl-soft)', borderColor: 'var(--hl)'}}), 'most called') : null,
+          idle.length ? h('span', null, h('span', {className: 'sw', style: {background: 'transparent', borderColor: 'var(--faint)', borderStyle: 'dashed'}}), 'no callers') : null,
+          h('span', null, h('span', {className: 'ln-sw'}), 'calls'),
+          h('span', null, h('span', {className: 'ln-sw dot'}), 'passed as a value'),
+          h('span', null, h('span', {className: 'ln-sw dash'}), 'imports'),
+          hasReads ? h('span', null, h('span', {className: 'ln-sw read'}), 'reads a constant') : null,
+          h('span', null, 'number = call sites folded'))),
+      panel.open ? h('div', {className: 'resizer', title: 'Drag to resize, or to the right edge to hide; double-click to reset',
+        onPointerDown: drag, onDoubleClick: () => setPanel(p => ({...p, width: 400}))}) : null,
+      panel.open ? h('aside', {style: {width: panel.width}}, h(Info, {id: sel, st, act})) : null));
 }
+
+const svg = (...paths) => h('svg', {viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round'},
+  ...paths.map((d, i) => h('path', {key: i, d})));
+const ICON = {
+  logo: svg('M3 5h7v6H3z', 'M14 13h7v6h-7z', 'M10 8h4v8'),
+  search: svg('M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z', 'M20 20l-4-4'),
+  fit: svg('M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'),
+  theme: svg('M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z'),
+  panel: svg('M4 4h16v16H4z', 'M15 4v16'),
+};
+function flipTheme() {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('codemap-theme', root.dataset.theme); } catch (e) {}
+}
+try { const t = localStorage.getItem('codemap-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
 
 document.title = 'Codemap · ' + D.repo;
 const dl = document.createElement('datalist');
 dl.id = 'ids';
-dl.innerHTML = D.nodes.filter(n => n.kind !== 'package').slice(0, 5000).map(n => `<option value="${n.id.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">`).join('');
+dl.innerHTML = D.nodes.filter(n => n.kind !== 'package' && n.kind !== 'toplevel').slice(0, 5000).map(n => `<option value="${n.id.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">`).join('');
 document.body.appendChild(dl);
 ReactDOM.createRoot(document.getElementById('app')).render(h(ReactFlowProvider, null, h(App)));
 </script>
